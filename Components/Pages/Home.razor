@@ -1,0 +1,530 @@
+@page "/"
+@inject JulesApiService JulesApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Jules Panel</PageTitle>
+
+<div class="jp-layout">
+
+    <!-- ══════════ RIGHT SIDEBAR (Sessions) ══════════ -->
+    <div class="jp-sidebar">
+
+        <div class="jp-sidebar-head">
+            <span class="jp-sidebar-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+                جلسات
+            </span>
+            <div class="jp-sidebar-actions">
+                <button class="jp-btn-icon" title="بارگذاری مجدد" @onclick="LoadSessions">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                </button>
+                <button class="jp-btn-icon accent" title="جلسه جدید" @onclick="OpenCreateDialog">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="jp-sessions">
+            @if (_loadSess)
+            {
+                <div class="jp-center"><div class="jp-spinner"></div></div>
+            }
+            else if (_sessions.Count == 0)
+            {
+                <div class="jp-empty-side">هیچ جلسه‌ای یافت نشد</div>
+            }
+            else
+            {
+                <!-- Group 1: In Progress -->
+                @if (WorkingSessions.Any())
+                {
+                    <div class="jp-group-label">
+                        <span class="jp-group-dot working"></span>
+                        در حال کار
+                        <span class="jp-group-count">@WorkingSessions.Count()</span>
+                    </div>
+                    @foreach (var s in WorkingSessions)
+                    {
+                        <div class="jp-session-item @(s.Id == _sel?.Id ? "active" : "")" @onclick="() => Pick(s)">
+                            <div class="jp-session-name">@(string.IsNullOrWhiteSpace(s.Title) ? "بدون عنوان" : s.Title)</div>
+                            <div class="jp-session-meta">
+                                <span class="jp-badge @Badge(s.State)">@(s.State ?? "—")</span>
+                                <span class="jp-time">@(s.CreateTime?.ToLocalTime().ToString("MM/dd HH:mm"))</span>
+                            </div>
+                        </div>
+                    }
+                }
+
+                <!-- Group 2: Completed -->
+                @if (DoneSessions.Any())
+                {
+                    <div class="jp-group-label">
+                        <span class="jp-group-dot done"></span>
+                        کامل‌شده
+                        <span class="jp-group-count">@DoneSessions.Count()</span>
+                    </div>
+                    @foreach (var s in DoneSessions)
+                    {
+                        <div class="jp-session-item @(s.Id == _sel?.Id ? "active" : "")" @onclick="() => Pick(s)">
+                            <div class="jp-session-name">@(string.IsNullOrWhiteSpace(s.Title) ? "بدون عنوان" : s.Title)</div>
+                            <div class="jp-session-meta">
+                                <span class="jp-badge @Badge(s.State)">@(s.State ?? "—")</span>
+                                <span class="jp-time">@(s.CreateTime?.ToLocalTime().ToString("MM/dd HH:mm"))</span>
+                            </div>
+                        </div>
+                    }
+                }
+
+                <!-- Group 3: Archived -->
+                @if (ArchivedSessions.Any())
+                {
+                    <div class="jp-group-label">
+                        <span class="jp-group-dot archived"></span>
+                        آرشیو‌شده
+                        <span class="jp-group-count">@ArchivedSessions.Count()</span>
+                    </div>
+                    @foreach (var s in ArchivedSessions)
+                    {
+                        <div class="jp-session-item @(s.Id == _sel?.Id ? "active" : "")" @onclick="() => Pick(s)">
+                            <div class="jp-session-name" style="opacity:.65">@(string.IsNullOrWhiteSpace(s.Title) ? "بدون عنوان" : s.Title)</div>
+                            <div class="jp-session-meta">
+                                <span class="jp-badge @Badge(s.State)">@(s.State ?? "—")</span>
+                                <span class="jp-time">@(s.CreateTime?.ToLocalTime().ToString("MM/dd HH:mm"))</span>
+                            </div>
+                        </div>
+                    }
+                }
+
+                <!-- Group 4: Other -->
+                @if (OtherSessions.Any())
+                {
+                    <div class="jp-group-label">
+                        <span class="jp-group-dot other"></span>
+                        سایر
+                        <span class="jp-group-count">@OtherSessions.Count()</span>
+                    </div>
+                    @foreach (var s in OtherSessions)
+                    {
+                        <div class="jp-session-item @(s.Id == _sel?.Id ? "active" : "")" @onclick="() => Pick(s)">
+                            <div class="jp-session-name">@(string.IsNullOrWhiteSpace(s.Title) ? "بدون عنوان" : s.Title)</div>
+                            <div class="jp-session-meta">
+                                <span class="jp-badge @Badge(s.State)">@(s.State ?? "—")</span>
+                                <span class="jp-time">@(s.CreateTime?.ToLocalTime().ToString("MM/dd HH:mm"))</span>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    <!-- ══════════ MAIN AREA ══════════ -->
+    <div class="jp-main">
+        @if (_sel == null)
+        {
+            <div class="jp-welcome">
+                <div class="jp-welcome-icon">⚡</div>
+                <div class="jp-welcome-text">یک جلسه انتخاب کنید یا جلسه جدیدی بسازید</div>
+                <button class="jp-btn-primary" @onclick="OpenCreateDialog">+ جلسه جدید</button>
+            </div>
+        }
+        else
+        {
+            <!-- Session Title Bar -->
+            <div class="jp-titlebar">
+                <div class="jp-titlebar-left">
+                    <span class="jp-session-title-text">@(string.IsNullOrWhiteSpace(_sel.Title) ? "بدون عنوان" : _sel.Title)</span>
+                    <span class="jp-badge @Badge(_sel.State)">@_sel.State</span>
+                </div>
+                <div class="jp-titlebar-actions">
+                    @if (_sel.NeedsPlanApproval)
+                    {
+                        <button class="jp-btn-approve-small" @onclick="Approve">⚠️ تأیید برنامه</button>
+                    }
+                    <button class="jp-btn-icon" title="به‌روزرسانی" @onclick="Refresh">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs Bar -->
+            <div class="jp-tabs">
+                <button class="jp-tab @(_tab == 0 ? "active" : "")" @onclick="@(() => _tab = 0)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    خروجی
+                    @if (_activities.Count > 0) { <span class="jp-tab-count">@_activities.Count</span> }
+                </button>
+                <button class="jp-tab @(_tab == 1 ? "active" : "")" @onclick="@(() => _tab = 1)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    برنامه
+                    @if (_sel.NeedsPlanApproval) { <span class="jp-badge-dot"></span> }
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="jp-content">
+
+                @if (_tab == 0)
+                {
+                    @if (_loadAct)
+                    {
+                        <div class="jp-center">
+                            <div class="jp-spinner"></div>
+                            <span>در حال دریافت فعالیت‌ها...</span>
+                        </div>
+                    }
+                    else if (!_activities.Any(a => a.HasContent))
+                    {
+                        <div class="jp-empty-msg">فعالیتی برای نمایش وجود ندارد</div>
+                    }
+                    else
+                    {
+                        @foreach (var a in _activities.Where(a => a.HasContent))
+                        {
+                            <div class="jp-activity @(a.IsUser ? "jp-activity-user" : "jp-activity-agent")">
+                                <div class="jp-activity-role">
+                                    <span class="jp-activity-who">
+                                        @if (a.IsUser)      { <text>👤 شما</text> }
+                                        else if (a.IsAgent) { <text>🤖 Jules</text> }
+                                        else if (a.Plan != null){ <text>📋 برنامه</text> }
+                                        else                { <text>ℹ️ @a.Originator</text> }
+                                    </span>
+                                    <span class="jp-activity-ts">@(a.CreateTime?.ToLocalTime().ToString("HH:mm:ss"))</span>
+                                </div>
+                                @if (a.Text != null)
+                                {
+                                    <div class="jp-activity-body">@a.Text</div>
+                                }
+                                else if (a.Plan != null)
+                                {
+                                    <div class="jp-activity-body plan-ref">
+                                        برنامه «<strong>@a.Plan.Title</strong>» ایجاد شد — برای جزئیات به تب <em>برنامه</em> بروید
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                }
+                else if (_tab == 1)
+                {
+                    @if (_plan == null)
+                    {
+                        <div class="jp-empty-msg">برنامه‌ای موجود نیست</div>
+                    }
+                    else
+                    {
+                        @if (_sel.NeedsPlanApproval)
+                        {
+                            <div class="jp-approve-bar">
+                                <div>
+                                    <div style="font-weight:700;margin-bottom:4px">⚠️ منتظر تأیید شماست</div>
+                                    <div style="font-size:.8rem;opacity:.75">برای اجرای برنامه باید آن را تأیید کنید</div>
+                                </div>
+                                <button class="jp-btn-approve" @onclick="Approve">✓ تأیید و اجرا</button>
+                            </div>
+                        }
+                        <div class="jp-plan-box">
+                            <div class="jp-plan-title">📋 @_plan.Title</div>
+                            @if (!string.IsNullOrWhiteSpace(_plan.Description))
+                            {
+                                <div class="jp-plan-desc">@_plan.Description</div>
+                            }
+                            @{ int n = 0; }
+                            @foreach (var step in _plan.Steps)
+                            {
+                                n++;
+                                <div class="jp-plan-step">
+                                    <div class="jp-plan-num">@n</div>
+                                    <div class="jp-plan-body">
+                                        <div class="jp-plan-step-title">@step.Title</div>
+                                        @if (!string.IsNullOrWhiteSpace(step.Description))
+                                        {
+                                            <div class="jp-plan-step-desc">@step.Description</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+
+            </div>
+
+            <!-- Prompt Bar -->
+            <div class="jp-prompt-bar">
+                <textarea class="jp-prompt-input" rows="2"
+                          @bind="_prompt" @bind:event="oninput"
+                          placeholder="دستور یا پیام خود را اینجا بنویسید..."
+                          @onkeydown="OnPromptKeyDown"></textarea>
+                <button class="jp-btn-send @(_sending ? "loading" : "")"
+                        disabled="@(string.IsNullOrWhiteSpace(_prompt) || _sending)"
+                        @onclick="Send">
+                    @if (_sending) { <div class="jp-spinner sm"></div> }
+                    else {
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+
+</div>
+
+<!-- ══════════ CREATE SESSION DIALOG ══════════ -->
+@if (_dlgOpen)
+{
+    <div class="jp-overlay" @onclick="@(() => _dlgOpen = false)">
+        <div class="jp-dialog" @onclick:stopPropagation="true">
+            <div class="jp-dialog-head">
+                <span>+ ایجاد جلسه جدید</span>
+                <button class="jp-btn-icon" @onclick="@(() => _dlgOpen = false)">✕</button>
+            </div>
+            <div class="jp-dialog-body">
+                <div class="jp-field">
+                    <label>عنوان <span style="opacity:.5">(اختیاری)</span></label>
+                    <input type="text" @bind="_nTitle" placeholder="مثلاً: بهینه‌سازی کد" />
+                </div>
+                <div class="jp-field">
+                    <label>دستور اولیه *</label>
+                    <textarea rows="4" @bind="_nPrompt" placeholder="وظیفه‌ای که Jules باید انجام دهد..."></textarea>
+                </div>
+                <div class="jp-field">
+                    <label>ریپازیتوری <span style="opacity:.5">(اختیاری)</span></label>
+                    @if (_loadSources)
+                    {
+                        <div class="jp-center" style="padding:12px"><div class="jp-spinner sm"></div><span style="font-size:.8rem">در حال دریافت...</span></div>
+                    }
+                    else
+                    {
+                        <select @bind="_nSource" @bind:after="OnSourceChanged">
+                            <option value="">— انتخاب نشده —</option>
+                            @foreach (var src in _sources)
+                            {
+                                <option value="@src.Name">@src.DisplayName @(src.GithubRepo?.IsPrivate == true ? "🔒" : "")</option>
+                            }
+                        </select>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(_nSource))
+                {
+                    var selSrc = _sources.FirstOrDefault(s => s.Name == _nSource);
+                    <div class="jp-field">
+                        <label>شاخه (Branch)</label>
+                        @if (selSrc?.GithubRepo?.Branches.Count > 0)
+                        {
+                            <select @bind="_nBranch">
+                                @foreach (var b in selSrc.GithubRepo.Branches)
+                                {
+                                    <option value="@b.DisplayName">@b.DisplayName</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="text" @bind="_nBranch" placeholder="main" />
+                        }
+                    </div>
+                }
+                <div class="jp-field-check">
+                    <input type="checkbox" id="chk-approval" @bind="_nApproval" />
+                    <label for="chk-approval">نیاز به تأیید برنامه قبل از اجرا</label>
+                </div>
+            </div>
+            <div class="jp-dialog-footer">
+                <button class="jp-btn-ghost" @onclick="@(() => _dlgOpen = false)">انصراف</button>
+                <button class="jp-btn-primary @(_creating ? "loading" : "")"
+                        disabled="@(string.IsNullOrWhiteSpace(_nPrompt) || _creating)"
+                        @onclick="Create">
+                    @if (_creating) { <div class="jp-spinner sm" style="margin-left:6px"></div> }
+                    ایجاد جلسه
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    List<Session> _sessions = new();
+    Session? _sel;
+    List<Activity> _activities = new();
+    Plan? _plan;
+    List<JulesSource> _sources = new();
+
+    bool _loadSess, _loadAct, _sending, _creating, _loadSources;
+    int _tab = 0;
+    string _prompt = "";
+
+    bool _dlgOpen;
+    string _nTitle = "", _nPrompt = "", _nSource = "", _nBranch = "main";
+    bool _nApproval = true;
+
+    System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSessions();
+        _timer = new System.Threading.Timer(async _ =>
+        {
+            if (_sel?.IsWorking == true || _sel?.NeedsPlanApproval == true)
+                await InvokeAsync(async () => { await Refresh(); StateHasChanged(); });
+        }, null, 8000, 8000);
+    }
+
+    async Task LoadSessions()
+    {
+        _loadSess = true; StateHasChanged();
+        var all = await JulesApi.ListSessionsAsync();
+        _sessions = all.OrderByDescending(s => s.CreateTime).ToList();
+        if (_sel != null) _sel = _sessions.FirstOrDefault(s => s.Id == _sel.Id) ?? _sel;
+        _loadSess = false; StateHasChanged();
+    }
+
+    async Task Pick(Session s)
+    {
+        _sel = s; _tab = 0; _activities = new(); _plan = null;
+        StateHasChanged();
+        await LoadAct();
+    }
+
+    async Task Refresh()
+    {
+        if (_sel == null) return;
+        var u = await JulesApi.GetSessionAsync(_sel.Name);
+        if (u != null)
+        {
+            _sel = u;
+            var i = _sessions.FindIndex(x => x.Id == u.Id);
+            if (i >= 0) _sessions[i] = u;
+        }
+        await LoadAct();
+    }
+
+    async Task LoadAct()
+    {
+        if (_sel == null) return;
+        _loadAct = true; StateHasChanged();
+        _activities = await JulesApi.ListActivitiesAsync(_sel.Name);
+        _plan = _activities.LastOrDefault(a => a.Plan != null)?.Plan;
+        _loadAct = false; StateHasChanged();
+    }
+
+    async Task OnPromptKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && e.CtrlKey) await Send();
+    }
+
+    async Task Send()
+    {
+        if (_sel == null || string.IsNullOrWhiteSpace(_prompt)) return;
+        _sending = true; StateHasChanged();
+        if (await JulesApi.SendMessageAsync(_sel.Name, _prompt))
+        {
+            Snackbar.Add("پیام ارسال شد", Severity.Success);
+            _prompt = "";
+            await Refresh();
+        }
+        else Snackbar.Add("خطا در ارسال", Severity.Error);
+        _sending = false; StateHasChanged();
+    }
+
+    async Task Approve()
+    {
+        if (_sel == null) return;
+        if (await JulesApi.ApprovePlanAsync(_sel.Name))
+        { Snackbar.Add("برنامه تأیید شد", Severity.Success); await Refresh(); }
+        else Snackbar.Add("خطا در تأیید", Severity.Error);
+    }
+
+    async Task OpenCreateDialog()
+    {
+        _nTitle = ""; _nPrompt = ""; _nSource = ""; _nBranch = "main"; _nApproval = true;
+        if (_sources.Count == 0)
+        {
+            _loadSources = true;
+            _dlgOpen = true;
+            StateHasChanged();
+            _sources = await JulesApi.ListSourcesAsync();
+            _loadSources = false;
+        }
+        else
+        {
+            _dlgOpen = true;
+        }
+        StateHasChanged();
+    }
+
+    void OnSourceChanged()
+    {
+        var src = _sources.FirstOrDefault(s => s.Name == _nSource);
+        _nBranch = src?.GithubRepo?.DefaultBranchName ?? "main";
+    }
+
+    async Task Create()
+    {
+        if (string.IsNullOrWhiteSpace(_nPrompt)) return;
+        _creating = true; StateHasChanged();
+        var req = new CreateSessionRequest
+        {
+            Prompt = _nPrompt,
+            Title = string.IsNullOrWhiteSpace(_nTitle) ? null : _nTitle,
+            RequirePlanApproval = _nApproval
+        };
+        if (!string.IsNullOrEmpty(_nSource))
+            req.SourceContext = new SourceContext
+            {
+                Source = _nSource,
+                GithubRepoContext = new GithubRepoContext { StartingBranch = _nBranch }
+            };
+
+        var s = await JulesApi.CreateSessionAsync(req);
+        _creating = false;
+        if (s != null)
+        {
+            Snackbar.Add("جلسه ایجاد شد", Severity.Success);
+            _dlgOpen = false;
+            await LoadSessions();
+            var found = _sessions.FirstOrDefault(x => x.Id == s.Id);
+            if (found != null) await Pick(found);
+        }
+        else Snackbar.Add("خطا در ایجاد جلسه", Severity.Error);
+        StateHasChanged();
+    }
+
+    // ── Computed session groups
+    IEnumerable<Session> WorkingSessions  => _sessions.Where(s => IsWorking(s.State));
+    IEnumerable<Session> DoneSessions     => _sessions.Where(s => IsDone(s.State));
+    IEnumerable<Session> ArchivedSessions => _sessions.Where(s => IsArchived(s.State));
+    IEnumerable<Session> OtherSessions    => _sessions.Where(s => !IsWorking(s.State) && !IsDone(s.State) && !IsArchived(s.State));
+
+    // ── Session state helpers
+    bool IsWorking(string? st)
+    {
+        if (st == null) return false;
+        var u = st.ToUpper();
+        return u.Contains("WORKING") || u.Contains("RUNNING") || (u.Contains("PLAN") && u.Contains("WAIT"));
+    }
+    bool IsDone(string? st)
+    {
+        if (st == null) return false;
+        var u = st.ToUpper();
+        return u.Contains("DONE") || u.Contains("COMPLETED") || u.Contains("FINISHED");
+    }
+    bool IsArchived(string? st)
+    {
+        if (st == null) return false;
+        return st.ToUpper().Contains("ARCHIVED");
+    }
+
+    string Badge(string? st)
+    {
+        if (st == null) return "badge-idle";
+        var u = st.ToUpper();
+        if (IsWorking(st)) return "badge-working";
+        if (IsDone(st))    return "badge-done";
+        if (IsArchived(st)) return "badge-archived";
+        if (u.Contains("ERROR") || u.Contains("FAIL")) return "badge-error";
+        return "badge-idle";
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}

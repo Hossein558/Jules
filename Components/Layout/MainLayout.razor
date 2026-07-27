@@ -1,0 +1,102 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_julesTheme" IsDarkMode="true" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <!-- Header -->
+    <MudAppBar Elevation="0" Class="jules-appbar">
+        <MudIcon Icon="@Icons.Material.Filled.Terminal" Class="mr-2" Style="color:#a78bfa" />
+        <MudText Typo="Typo.h6" Style="font-family:'Vazirmatn',sans-serif;font-weight:700;color:#e2d9f3">Jules Panel</MudText>
+        <MudSpacer />
+        <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Circle" Class="mr-2">متصل</MudChip>
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="OpenSettings" />
+    </MudAppBar>
+
+    <!-- Main Content -->
+    <MudMainContent Class="jules-main">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<!-- Settings Dialog -->
+<MudDialog @bind-IsVisible="_settingsOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">⚙️ تنظیمات API</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_apiKeyInput"
+                      Label="Jules API Key"
+                      Variant="Variant.Outlined"
+                      InputType="InputType.Password"
+                      FullWidth="true"
+                      Class="mt-2"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Key" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="() => _settingsOpen = false">انصراف</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveSettings">ذخیره</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Inject] private JulesApiService JulesApi { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private bool _settingsOpen = false;
+    private string _apiKeyInput = string.Empty;
+
+    private DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+        CloseOnEscapeKey = true
+    };
+
+    private MudTheme _julesTheme = new MudTheme()
+    {
+        Palette = new PaletteLight()
+        {
+            Primary = "#a78bfa",
+            Secondary = "#7c3aed",
+            Background = "#0f0d14",
+            Surface = "#1a1625",
+            AppbarBackground = "#13101d",
+            DrawerBackground = "#13101d",
+            TextPrimary = "#e2d9f3",
+            TextSecondary = "#9d8fc0",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#a78bfa",
+            Secondary = "#7c3aed",
+            Background = "#0f0d14",
+            Surface = "#1a1625",
+            AppbarBackground = "#13101d",
+            DrawerBackground = "#13101d",
+            TextPrimary = "#e2d9f3",
+            TextSecondary = "#9d8fc0",
+            ActionDefault = "#9d8fc0",
+            DrawerText = "#e2d9f3",
+            DrawerIcon = "#a78bfa",
+        }
+    };
+
+    private void OpenSettings()
+    {
+        _apiKeyInput = JulesApi.GetCurrentApiKey();
+        _settingsOpen = true;
+    }
+
+    private void SaveSettings()
+    {
+        if (!string.IsNullOrWhiteSpace(_apiKeyInput))
+        {
+            JulesApi.UpdateApiKey(_apiKeyInput);
+            Snackbar.Add("API Key با موفقیت ذخیره شد", Severity.Success);
+        }
+        _settingsOpen = false;
+    }
+}
