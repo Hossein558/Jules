@@ -15,6 +15,7 @@ builder.Services.AddHttpClient<JulesApiService>(client =>
 });
 
 builder.Services.AddSingleton<JulesApiService>();
+builder.Services.AddSingleton<AccountService>();
 
 var app = builder.Build();
 

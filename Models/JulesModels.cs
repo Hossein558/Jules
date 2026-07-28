@@ -2,6 +2,35 @@ using System.Text.Json.Serialization;
 
 namespace JulesPanel.Models;
 
+// ─── Account Profile ─────────────────────────────────────────────────────────
+
+public class AccountProfile
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [JsonPropertyName("apiKey")]
+    public string ApiKey { get; set; } = string.Empty;
+
+    [JsonPropertyName("color")]
+    public string Color { get; set; } = "#a78bfa";
+
+    [JsonPropertyName("createdAt")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Initials for avatar
+    public string Initials => string.IsNullOrWhiteSpace(Name)
+        ? "?"
+        : string.Concat(Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Take(2).Select(w => w[0])).ToUpper();
+}
+
 // ─── Session ────────────────────────────────────────────────────────────────
 
 public class Session
@@ -27,8 +56,14 @@ public class Session
     [JsonPropertyName("sourceContext")]
     public SourceContext? SourceContext { get; set; }
 
+    // Multi-Account binding (client-side)
+    public string? AccountId { get; set; }
+    public string? AccountName { get; set; }
+    public string? AccountColor { get; set; }
+
     // Derived helper
     public string Id => Name.Contains('/') ? Name.Split('/').Last() : Name;
+
 
     public bool IsArchived => State?.Equals("ARCHIVED", StringComparison.OrdinalIgnoreCase) == true;
     public bool IsWorking => State?.Contains("WORKING", StringComparison.OrdinalIgnoreCase) == true

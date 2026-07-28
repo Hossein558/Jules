@@ -21,24 +21,31 @@ public class JulesApiService
         _http = http;
         _config = config;
         _logger = logger;
-        ConfigureClient();
+        _http.BaseAddress = new Uri(_config["Jules:BaseUrl"] ?? "https://jules.googleapis.com/v1alpha/");
     }
 
-    private void ConfigureClient()
+    private HttpRequestMessage CreateRequest(HttpMethod method, string path, string? apiKeyOverride = null)
     {
-        var apiKey = _config["Jules:ApiKey"] ?? string.Empty;
-        _http.BaseAddress = new Uri(_config["Jules:BaseUrl"] ?? "https://jules.googleapis.com/v1alpha/");
-        _http.DefaultRequestHeaders.Remove("x-goog-api-key");
-        _http.DefaultRequestHeaders.Add("x-goog-api-key", apiKey);
+        var req = new HttpRequestMessage(method, path);
+        var key = !string.IsNullOrWhiteSpace(apiKeyOverride)
+            ? apiKeyOverride
+            : (_config["Jules:ApiKey"] ?? string.Empty);
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            req.Headers.Add("x-goog-api-key", key);
+        }
+        return req;
     }
 
     // ── Sessions ─────────────────────────────────────────────────────────────
 
-    public async Task<List<Session>> ListSessionsAsync(CancellationToken ct = default)
+    public async Task<List<Session>> ListSessionsAsync(string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var resp = await _http.GetAsync("sessions?pageSize=50", ct);
+            using var req = CreateRequest(HttpMethod.Get, "sessions?pageSize=50", apiKey);
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync(ct);
             _logger.LogDebug("ListSessions response: {Content}", content);
@@ -52,11 +59,12 @@ public class JulesApiService
         }
     }
 
-    public async Task<Session?> GetSessionAsync(string sessionId, CancellationToken ct = default)
+    public async Task<Session?> GetSessionAsync(string sessionId, string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var resp = await _http.GetAsync($"sessions/{ExtractId(sessionId)}", ct);
+            using var req = CreateRequest(HttpMethod.Get, $"sessions/{ExtractId(sessionId)}", apiKey);
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync(ct);
             return JsonSerializer.Deserialize<Session>(content, JsonOptions);
@@ -68,13 +76,15 @@ public class JulesApiService
         }
     }
 
-    public async Task<Session?> CreateSessionAsync(CreateSessionRequest request, CancellationToken ct = default)
+    public async Task<Session?> CreateSessionAsync(CreateSessionRequest request, string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
             var json = JsonSerializer.Serialize(request, JsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var resp = await _http.PostAsync("sessions", content, ct);
+            using var req = CreateRequest(HttpMethod.Post, "sessions", apiKey);
+            req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             var respContent = await resp.Content.ReadAsStringAsync(ct);
             _logger.LogInformation("CreateSession response: {Content}", respContent);
@@ -87,14 +97,16 @@ public class JulesApiService
         }
     }
 
-    public async Task<bool> SendMessageAsync(string sessionId, string prompt, CancellationToken ct = default)
+    public async Task<bool> SendMessageAsync(string sessionId, string prompt, string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var request = new SendMessageRequest { Prompt = prompt };
-            var json = JsonSerializer.Serialize(request, JsonOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var resp = await _http.PostAsync($"sessions/{ExtractId(sessionId)}:sendMessage", content, ct);
+            var body = new SendMessageRequest { Prompt = prompt };
+            var json = JsonSerializer.Serialize(body, JsonOptions);
+            using var req = CreateRequest(HttpMethod.Post, $"sessions/{ExtractId(sessionId)}:sendMessage", apiKey);
+            req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             return true;
         }
@@ -105,12 +117,14 @@ public class JulesApiService
         }
     }
 
-    public async Task<bool> ApprovePlanAsync(string sessionId, CancellationToken ct = default)
+    public async Task<bool> ApprovePlanAsync(string sessionId, string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var content = new StringContent("{}", Encoding.UTF8, "application/json");
-            var resp = await _http.PostAsync($"sessions/{ExtractId(sessionId)}:approvePlan", content, ct);
+            using var req = CreateRequest(HttpMethod.Post, $"sessions/{ExtractId(sessionId)}:approvePlan", apiKey);
+            req.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             return true;
         }
@@ -123,17 +137,17 @@ public class JulesApiService
 
     // ── Activities ────────────────────────────────────────────────────────────
 
-    // Strip the "sessions/" prefix if present so we don't double it in the URL
     private static string ExtractId(string nameOrId) =>
         nameOrId.StartsWith("sessions/", StringComparison.OrdinalIgnoreCase)
             ? nameOrId["sessions/".Length..]
             : nameOrId;
 
-    public async Task<List<Activity>> ListActivitiesAsync(string sessionId, CancellationToken ct = default)
+    public async Task<List<Activity>> ListActivitiesAsync(string sessionId, string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var resp = await _http.GetAsync($"sessions/{ExtractId(sessionId)}/activities?pageSize=100", ct);
+            using var req = CreateRequest(HttpMethod.Get, $"sessions/{ExtractId(sessionId)}/activities?pageSize=100", apiKey);
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync(ct);
             _logger.LogDebug("ListActivities response: {Content}", content);
@@ -149,11 +163,12 @@ public class JulesApiService
 
     // ── Sources ───────────────────────────────────────────────────────────────
 
-    public async Task<List<JulesSource>> ListSourcesAsync(CancellationToken ct = default)
+    public async Task<List<JulesSource>> ListSourcesAsync(string? apiKey = null, CancellationToken ct = default)
     {
         try
         {
-            var resp = await _http.GetAsync("sources", ct);
+            using var req = CreateRequest(HttpMethod.Get, "sources", apiKey);
+            var resp = await _http.SendAsync(req, ct);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync(ct);
             var result = JsonSerializer.Deserialize<ListSourcesResponse>(content, JsonOptions);
@@ -173,7 +188,5 @@ public class JulesApiService
     public void UpdateApiKey(string newKey)
     {
         _config["Jules:ApiKey"] = newKey;
-        _http.DefaultRequestHeaders.Remove("x-goog-api-key");
-        _http.DefaultRequestHeaders.Add("x-goog-api-key", newKey);
     }
 }
