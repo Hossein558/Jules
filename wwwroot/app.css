@@ -60,7 +60,7 @@ html, body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* ── MudBlazor AppBar Override ──────────────────────── */
+/* ── MudBlazor Override — force full-height flex chain ─ */
 .mud-appbar {
     background: var(--bg-panel) !important;
     border-bottom: 1px solid var(--bd) !important;
@@ -69,19 +69,53 @@ html, body {
     height: 52px !important;
     color: var(--tx) !important;
 }
-.mud-main-content { padding-top: 52px !important; }
+
+/* MudLayout is the root flex container — must fill the viewport */
+.mud-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* MudMainContent must grow to fill remaining height below the AppBar */
+.mud-main-content,
+.jules-main {
+    flex: 1 1 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 0 !important;        /* kill MudBlazor's default padding-top */
+    min-height: 0 !important;     /* allow flex shrink below content size  */
+}
+
+/* Our page component (Home.razor) renders directly inside MudMainContent.
+   This ensures the first child also stretches. */
+.mud-main-content > * {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .mud-icon-root, .mud-svg-icon {
     width: 1em !important; height: 1em !important;
     max-width: 22px !important; max-height: 22px !important;
 }
 
-/* ── Layout ──────────────────────────────────────────── */
+/* ── Root App Layout ─────────────────────────────────── */
+/*  jp-layout is the direct flex row that holds sidebar + main.
+    It no longer needs to know the AppBar height — the flex chain
+    above already consumed it. */
 .jp-layout {
     display: flex;
     flex-direction: row;
-    height: calc(100vh - 52px);
+    flex: 1 1 0;          /* grow to fill jules-main */
+    min-height: 0;        /* critical: allows children to shrink */
     overflow: hidden;
+    width: 100%;
 }
+
 
 /* ── Sidebar ─────────────────────────────────────────── */
 .jp-sidebar {

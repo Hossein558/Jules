@@ -44,6 +44,7 @@
 @code {
     [Inject] private JulesApiService JulesApi { get; set; } = default!;
     [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private IConfiguration Config { get; set; } = default!;
 
     private bool _settingsOpen = false;
     private string _apiKeyInput = string.Empty;
@@ -94,7 +95,7 @@
     {
         if (!string.IsNullOrWhiteSpace(_apiKeyInput))
         {
-            JulesApi.UpdateApiKey(_apiKeyInput);
+            Config["Jules:ApiKey"] = _apiKeyInput;
             Snackbar.Add("API Key با موفقیت ذخیره شد", Severity.Success);
         }
         _settingsOpen = false;
