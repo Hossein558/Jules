@@ -1,755 +1,803 @@
 /* ═══════════════════════════════════════════════════════
-   Jules Panel — Premium CSS (No MudTabs, Pure CSS Tabs)
-   Sidebar: RIGHT  |  Main: LEFT  |  RTL Layout
+   Jules Panel — Unified Dark-Premium Design System
+   Sidebar: RIGHT  |  Main: LEFT  |  RTL  |  Dark Theme
 ═══════════════════════════════════════════════════════ */
 
+/* ── Design Tokens ──────────────────────────────────── */
 :root {
-    --c-bg:       #0c0a14;
-    --c-panel:    #13101e;
-    --c-card:     #1c1928;
-    --c-hover:    #221f32;
-    --c-active:   #2c2840;
-    --c-border:   rgba(167,139,250,.10);
-    --c-border2:  rgba(167,139,250,.25);
-    --c-accent:   #a78bfa;
-    --c-accent2:  #c4b5fd;
-    --c-dim:      #7c3aed;
-    --c-text:     #ede9fe;
-    --c-muted:    #a59ecb;
-    --c-faint:    #5c5278;
-    --c-green:    #34d399;
-    --c-yellow:   #fbbf24;
-    --c-red:      #f87171;
-    --c-blue:     #60a5fa;
-    --r:          10px;
-    --r-sm:       6px;
+    /* Backgrounds */
+    --bg-base:    #09080f;
+    --bg-panel:   #110f1c;
+    --bg-card:    #19162a;
+    --bg-hover:   #201c33;
+    --bg-active:  #2a2542;
+    --bg-input:   #141124;
+    --bg-modal:   #15122a;
+
+    /* Borders */
+    --bd:         rgba(167,139,250,.12);
+    --bd2:        rgba(167,139,250,.28);
+    --bd-focus:   rgba(167,139,250,.6);
+
+    /* Text */
+    --tx:         #ede9fe;
+    --tx-muted:   #9d92c8;
+    --tx-faint:   #4e4470;
+    --tx-invert:  #09080f;
+
+    /* Accent */
+    --ac:         #a78bfa;
+    --ac-dim:     #7c3aed;
+    --ac-glow:    rgba(167,139,250,.22);
+    --ac-hover:   rgba(167,139,250,.15);
+
+    /* Semantics */
+    --green:   #34d399;
+    --yellow:  #fbbf24;
+    --red:     #f87171;
+    --blue:    #60a5fa;
+    --orange:  #fb923c;
+
+    /* Shape */
+    --r:    10px;
+    --r-sm:  6px;
+    --r-lg: 14px;
+
+    /* Motion */
+    --ease: .15s ease;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
     height: 100%;
-    background: var(--c-bg);
-    color: var(--c-text);
-    font-family: 'Vazirmatn', 'Roboto', sans-serif;
+    background: var(--bg-base);
+    color: var(--tx);
+    font-family: 'Vazirmatn', 'Inter', 'Roboto', sans-serif;
+    font-size: 14px;
     overflow: hidden;
     direction: rtl;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ─── AppBar (MudBlazor) ─────────────────────────────── */
+/* ── MudBlazor AppBar Override ──────────────────────── */
 .mud-appbar {
-    background: var(--c-panel) !important;
-    border-bottom: 1px solid var(--c-border) !important;
-    box-shadow: 0 2px 20px rgba(0,0,0,.45) !important;
-    min-height: 54px !important;
-    height: 54px !important;
-    color: var(--c-text) !important;
+    background: var(--bg-panel) !important;
+    border-bottom: 1px solid var(--bd) !important;
+    box-shadow: 0 1px 24px rgba(0,0,0,.5) !important;
+    min-height: 52px !important;
+    height: 52px !important;
+    color: var(--tx) !important;
 }
-.mud-main-content { padding-top: 54px !important; }
+.mud-main-content { padding-top: 52px !important; }
+.mud-icon-root, .mud-svg-icon {
+    width: 1em !important; height: 1em !important;
+    max-width: 22px !important; max-height: 22px !important;
+}
 
-/* ─── Root Layout ────────────────────────────────────── */
+/* ── Layout ──────────────────────────────────────────── */
 .jp-layout {
     display: flex;
-    flex-direction: row;          /* RTL: first child → right */
-    height: calc(100vh - 54px);
+    flex-direction: row;
+    height: calc(100vh - 52px);
     overflow: hidden;
 }
 
-/* ─── RIGHT SIDEBAR ──────────────────────────────────── */
+/* ── Sidebar ─────────────────────────────────────────── */
 .jp-sidebar {
-    width: 270px;
+    width: 272px;
     min-width: 240px;
-    max-width: 270px;
+    max-width: 272px;
     flex-shrink: 0;
-    background: var(--c-panel);
-    border-left: 1px solid var(--c-border);  /* left border (it's on the right visually) */
+    background: var(--bg-panel);
+    border-left: 1px solid var(--bd);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
-
-.jp-sidebar-actions { display: flex; gap: 4px; }
-
-.jp-btn-icon.accent { background: rgba(167,139,250,.18); color: var(--c-accent); border-color: var(--c-border2); }
-.jp-btn-icon.accent:hover { background: rgba(167,139,250,.3); }
-
-/* Group labels */
-.jp-group-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: .67rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--c-faint);
-    padding: 10px 8px 4px;
-    margin-top: 4px;
-}
-.jp-group-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.jp-group-dot.working  { background: var(--c-accent); box-shadow: 0 0 6px var(--c-accent); }
-.jp-group-dot.done     { background: var(--c-green); }
-.jp-group-dot.archived { background: var(--c-faint); }
-.jp-group-dot.other    { background: var(--c-blue); }
-
-.jp-group-count {
-    margin-right: auto;
-    background: rgba(167,139,250,.1);
-    color: var(--c-muted);
-    font-size: .6rem;
-    padding: 1px 6px;
-    border-radius: 10px;
-    font-weight: 600;
 }
 
 .jp-sidebar-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 15px;
-    border-bottom: 1px solid var(--c-border);
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--bd);
     flex-shrink: 0;
 }
 
 .jp-sidebar-title {
-    font-size: .78rem;
-    font-weight: 700;
-    color: var(--c-muted);
-    text-transform: uppercase;
-    letter-spacing: .07em;
     display: flex;
     align-items: center;
     gap: 7px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--tx-muted);
 }
 
-.jp-sessions {
+.jp-head-actions { display: flex; align-items: center; gap: 4px; }
+
+/* ── Unified Icon Button ─────────────────────────────── */
+.jp-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--r-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--tx-muted);
+    cursor: pointer;
+    transition: background var(--ease), color var(--ease), border-color var(--ease);
+    flex-shrink: 0;
+}
+.jp-icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--tx);
+    border-color: var(--bd);
+}
+.jp-icon-btn--accent {
+    background: var(--ac-hover);
+    color: var(--ac);
+    border-color: var(--bd2);
+}
+.jp-icon-btn--accent:hover {
+    background: rgba(167,139,250,.25);
+    border-color: var(--ac);
+}
+.jp-icon-btn--danger { color: var(--red); }
+.jp-icon-btn--danger:hover { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.3); }
+
+/* ── Unified Primary Button System ──────────────────── */
+.jp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 16px;
+    height: 36px;
+    border-radius: var(--r-sm);
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--ease), box-shadow var(--ease), opacity var(--ease);
+    white-space: nowrap;
+}
+.jp-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.jp-btn--primary {
+    background: var(--ac-dim);
+    color: #fff;
+    border-color: var(--ac-dim);
+    box-shadow: 0 2px 12px rgba(124,58,237,.35);
+}
+.jp-btn--primary:hover:not(:disabled) {
+    background: var(--ac);
+    box-shadow: 0 4px 18px rgba(167,139,250,.45);
+}
+
+.jp-btn--ghost {
+    background: transparent;
+    color: var(--tx-muted);
+    border-color: var(--bd);
+}
+.jp-btn--ghost:hover:not(:disabled) { background: var(--bg-hover); color: var(--tx); border-color: var(--bd2); }
+
+.jp-btn--warn {
+    background: rgba(251,191,36,.12);
+    color: var(--yellow);
+    border-color: rgba(251,191,36,.3);
+}
+.jp-btn--warn:hover:not(:disabled) { background: rgba(251,191,36,.2); }
+
+.jp-btn--send {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: var(--r-sm);
+    background: var(--ac-dim);
+    color: #fff;
+    border-color: var(--ac-dim);
+    flex-shrink: 0;
+}
+.jp-btn--send:hover:not(:disabled) { background: var(--ac); }
+
+.jp-btn--sm { height: 30px; padding: 0 12px; font-size: .76rem; }
+
+/* ── Session List ────────────────────────────────────── */
+.jp-session-list {
     flex: 1;
     overflow-y: auto;
-    padding: 6px;
+    padding: 6px 6px 0;
+}
+.jp-session-list::-webkit-scrollbar { width: 3px; }
+.jp-session-list::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+/* Group header */
+.jp-group-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--tx-faint);
+    padding: 10px 6px 4px;
+}
+.jp-group-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.jp-group-dot--working  { background: var(--ac); box-shadow: 0 0 6px var(--ac); }
+.jp-group-dot--done     { background: var(--green); }
+.jp-group-dot--archived { background: var(--tx-faint); }
+.jp-group-dot--other    { background: var(--blue); }
+.jp-group-count {
+    margin-right: auto;
+    font-size: .6rem;
+    background: var(--bg-active);
+    color: var(--tx-muted);
+    padding: 1px 6px;
+    border-radius: 10px;
 }
 
-.jp-sessions::-webkit-scrollbar { width: 3px; }
-.jp-sessions::-webkit-scrollbar-thumb { background: var(--c-border2); border-radius: 2px; }
-
-.jp-session-item {
-    padding: 11px 13px;
+/* Session card */
+.jp-sess-card {
+    padding: 10px 10px 9px;
     border-radius: var(--r-sm);
     cursor: pointer;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     border: 1px solid transparent;
-    transition: background .15s, border-color .15s;
+    transition: background var(--ease), border-color var(--ease);
     position: relative;
 }
-
-.jp-session-item:hover   { background: var(--c-hover); }
-.jp-session-item.active  { background: var(--c-active); border-color: var(--c-border2); }
-
-.jp-session-item.active::after {
+.jp-sess-card:hover { background: var(--bg-hover); }
+.jp-sess-card--active {
+    background: var(--bg-active);
+    border-color: var(--bd2);
+}
+.jp-sess-card--active::before {
     content: '';
     position: absolute;
-    left: -1px; top: 18%; height: 64%; width: 3px;
-    background: var(--c-accent);
+    left: -1px; top: 20%; height: 60%; width: 3px;
+    background: var(--ac);
     border-radius: 0 2px 2px 0;
 }
 
-.jp-session-name {
+.jp-sess-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+.jp-sess-name {
     font-size: .82rem;
     font-weight: 500;
-    color: var(--c-text);
+    color: var(--tx);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 5px;
+    flex: 1;
+    min-width: 0;
+}
+.jp-sess-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.jp-sess-time { font-size: .64rem; color: var(--tx-faint); }
+
+/* ── Account badge (small circle) ───────────────────── */
+.jp-acc-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: .55rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    user-select: none;
+    line-height: 1;
 }
 
-.jp-session-meta { display: flex; align-items: center; justify-content: space-between; }
-.jp-time { font-size: .66rem; color: var(--c-faint); }
-
-/* ─── BADGES ─────────────────────────────────────────── */
-.jp-badge {
-    font-size: .63rem;
+/* ── Status Badges ───────────────────────────────────── */
+.jp-status-badge {
+    display: inline-block;
+    font-size: .60rem;
     font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    text-transform: uppercase;
     letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
     white-space: nowrap;
 }
-.badge-working  { background: rgba(167,139,250,.15); color: var(--c-accent); }
-.badge-done     { background: rgba(52,211,153,.12);  color: var(--c-green); }
-.badge-plan     { background: rgba(251,191,36,.12);  color: var(--c-yellow); }
-.badge-archived { background: rgba(92,82,120,.15);   color: var(--c-faint); }
-.badge-error    { background: rgba(248,113,113,.12); color: var(--c-red); }
-.badge-idle     { background: rgba(96,165,250,.12);  color: var(--c-blue); }
+.jp-status-badge--working  { background: rgba(167,139,250,.15); color: var(--ac); }
+.jp-status-badge--done     { background: rgba(52,211,153,.12);  color: var(--green); }
+.jp-status-badge--archived { background: rgba(78,68,112,.2);    color: var(--tx-faint); }
+.jp-status-badge--error    { background: rgba(248,113,113,.12); color: var(--red); }
+.jp-status-badge--idle     { background: rgba(96,165,250,.10);  color: var(--blue); }
 
-/* ─── MAIN AREA ──────────────────────────────────────── */
+/* ── Account stats footer ────────────────────────────── */
+.jp-acc-stats {
+    border-top: 1px solid var(--bd);
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+}
+.jp-acc-stat-row { display: flex; align-items: center; gap: 8px; font-size: .71rem; }
+.jp-acc-pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.jp-acc-stat-name { flex: 1; color: var(--tx-muted); font-weight: 500; }
+.jp-acc-stat-val { color: var(--tx-faint); }
+
+/* ── Main Panel ──────────────────────────────────────── */
 .jp-main {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     min-width: 0;
-    background: var(--c-bg);
+    background: var(--bg-base);
 }
 
-/* Welcome / Empty State */
+/* ── Welcome Screen ──────────────────────────────────── */
 .jp-welcome {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(124,58,237,.06) 0%, transparent 70%);
+    gap: 12px;
+    text-align: center;
+    padding: 40px;
 }
-.jp-welcome-icon { font-size: 52px; opacity: .2; }
-.jp-welcome-text { color: var(--c-muted); font-size: .9rem; }
+.jp-welcome-glyph {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 0 20px rgba(167,139,250,.5));
+    animation: pulse-glyph 3s ease-in-out infinite;
+}
+@keyframes pulse-glyph {
+    0%, 100% { filter: drop-shadow(0 0 20px rgba(167,139,250,.4)); }
+    50%       { filter: drop-shadow(0 0 35px rgba(167,139,250,.75)); }
+}
+.jp-welcome-heading { font-size: 1.4rem; font-weight: 700; color: var(--tx); }
+.jp-welcome-sub { font-size: .88rem; color: var(--tx-muted); max-width: 380px; line-height: 1.6; }
+.jp-welcome-actions { display: flex; gap: 10px; margin-top: 8px; }
 
-/* ─── TITLE BAR ──────────────────────────────────────── */
+/* ── Title Bar ───────────────────────────────────────── */
 .jp-titlebar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 18px;
-    border-bottom: 1px solid var(--c-border);
-    background: var(--c-panel);
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--bd);
+    background: var(--bg-panel);
     flex-shrink: 0;
-    gap: 8px;
+    gap: 10px;
 }
-.jp-titlebar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.jp-titlebar-actions { display: flex; align-items: center; gap: 8px; }
-
-.jp-btn-approve-small {
-    background: rgba(251,191,36,.15);
-    color: var(--c-yellow);
-    border: 1px solid rgba(251,191,36,.3);
-    border-radius: var(--r-sm);
-    padding: 6px 12px;
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-    animation: shimmer 2s ease infinite alternate;
-}
-.jp-btn-approve-small:hover { background: rgba(251,191,36,.28); }
-
-.jp-tab-count {
-    background: rgba(167,139,250,.15);
-    color: var(--c-muted);
-    font-size: .6rem;
-    padding: 1px 6px;
-    border-radius: 10px;
-    font-weight: 600;
-    margin-right: 2px;
+.jp-titlebar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+.jp-titlebar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.jp-titlebar-name {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--tx);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.jp-session-title-text { font-size: .92rem; font-weight: 600; color: var(--c-text); }
-
-/* ─── TABS ───────────────────────────────────────────── */
+/* ── Tab Strip ───────────────────────────────────────── */
 .jp-tabs {
     display: flex;
-    flex-direction: row;
     gap: 2px;
-    padding: 0 14px;
-    border-bottom: 1px solid var(--c-border);
-    background: var(--c-panel);
+    padding: 0 16px;
+    border-bottom: 1px solid var(--bd);
+    background: var(--bg-panel);
     flex-shrink: 0;
 }
-
 .jp-tab {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 14px;
-    background: none;
+    padding: 10px 14px 9px;
+    font-family: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--tx-muted);
+    background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    color: var(--c-muted);
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .82rem;
-    font-weight: 500;
     cursor: pointer;
-    transition: color .15s, border-color .15s;
+    transition: color var(--ease), border-color var(--ease);
     position: relative;
-    margin-bottom: -1px;
 }
-
-.jp-tab:hover  { color: var(--c-text); }
-.jp-tab.active { color: var(--c-accent); border-bottom-color: var(--c-accent); }
-
-.jp-badge-dot {
-    display: inline-block;
-    width: 7px; height: 7px;
+.jp-tab:hover { color: var(--tx); }
+.jp-tab--active { color: var(--ac); border-bottom-color: var(--ac); }
+.jp-tab-pill {
+    background: var(--bg-active);
+    color: var(--tx-muted);
+    font-size: .60rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+.jp-tab--active .jp-tab-pill { background: var(--ac-hover); color: var(--ac); }
+.jp-tab-dot {
+    width: 6px; height: 6px;
+    background: var(--yellow);
     border-radius: 50%;
-    background: var(--c-yellow);
-    animation: blink 1.4s ease infinite;
+    box-shadow: 0 0 6px var(--yellow);
 }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* ─── CONTENT SCROLL AREA ────────────────────────────── */
+/* ── Content Area ────────────────────────────────────── */
 .jp-content {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    overflow-x: hidden;
+    padding: 0;
+    min-height: 0;
 }
+.jp-content::-webkit-scrollbar { width: 4px; }
+.jp-content::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
 
-.jp-content::-webkit-scrollbar { width: 5px; }
-.jp-content::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+/* ── Activity Feed ───────────────────────────────────── */
+.jp-feed { display: flex; flex-direction: column; gap: 0; padding: 16px 20px; }
 
-.jp-empty-msg {
-    text-align: center;
-    color: var(--c-faint);
-    padding: 48px 20px;
-    font-size: .88rem;
-}
-
-/* ─── ACTIVITY CARDS ─────────────────────────────────── */
-.jp-activity {
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
+.jp-bubble {
+    padding: 12px 16px;
     border-radius: var(--r);
-    padding: 13px 16px;
-    animation: fadeUp .22s ease;
-    transition: border-color .15s;
+    margin-bottom: 10px;
+    border: 1px solid var(--bd);
+    animation: bubble-in .2s ease;
 }
-.jp-activity:hover { border-color: var(--c-border2); }
-.jp-activity-agent { border-right: 3px solid rgba(167,139,250,.4); }
-.jp-activity-user  { border-right: 3px solid rgba(96,165,250,.4); background: rgba(96,165,250,.03); }
-
-.jp-activity-who { font-weight: 700; }
-
-.jp-activity-body.plan-ref {
-    color: var(--c-accent2);
-    font-style: italic;
+@keyframes bubble-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
 }
+.jp-bubble--agent { background: var(--bg-card); }
+.jp-bubble--user  { background: var(--bg-active); border-color: var(--bd2); }
 
-@keyframes fadeUp {
-    from { opacity:0; transform:translateY(6px); }
-    to   { opacity:1; transform:translateY(0); }
-}
-
-.jp-activity-role {
+.jp-bubble-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: .72rem;
-    font-weight: 700;
-    color: var(--c-muted);
     margin-bottom: 8px;
 }
-.jp-activity-ts { font-size: .66rem; color: var(--c-faint); font-weight: 400; }
+.jp-bubble-who {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.jp-bubble-who--agent { color: var(--ac); }
+.jp-bubble-who--user  { color: var(--green); }
+.jp-bubble-ts { font-size: .65rem; color: var(--tx-faint); }
 
-.jp-activity-body {
+.jp-bubble-body {
     font-size: .85rem;
-    color: var(--c-text);
     line-height: 1.65;
+    color: var(--tx);
     white-space: pre-wrap;
     word-break: break-word;
 }
+.jp-bubble-plan-ref {
+    font-size: .80rem;
+    color: var(--tx-muted);
+    font-style: italic;
+}
 
-/* ─── PLAN ───────────────────────────────────────────── */
-.jp-approve-bar {
-    background: linear-gradient(120deg, rgba(251,191,36,.08), rgba(167,139,250,.06));
-    border: 1px solid rgba(251,191,36,.28);
-    border-radius: var(--r);
-    padding: 14px 18px;
+/* ── Plan Panel ──────────────────────────────────────── */
+.jp-plan-panel { padding: 18px 20px; }
+.jp-plan-title { font-size: 1rem; font-weight: 700; color: var(--ac); margin-bottom: 6px; }
+.jp-plan-desc { font-size: .82rem; color: var(--tx-muted); margin-bottom: 16px; line-height: 1.6; }
+
+.jp-approve-banner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
-    animation: shimmer 2.5s ease infinite alternate;
-}
-@keyframes shimmer {
-    from { box-shadow: none; }
-    to   { box-shadow: 0 0 18px rgba(251,191,36,.12); }
-}
-
-.jp-plan-box {
-    background: var(--c-card);
-    border: 1px solid var(--c-border2);
-    border-radius: var(--r);
-    padding: 18px;
-}
-.jp-plan-title {
-    font-size: .95rem;
-    font-weight: 700;
-    color: var(--c-accent2);
-    margin-bottom: 14px;
-}
-.jp-plan-desc {
-    font-size: .83rem;
-    color: var(--c-muted);
-    margin-bottom: 14px;
-    line-height: 1.6;
-}
-.jp-plan-step {
-    display: flex;
     gap: 12px;
-    padding: 11px 13px;
+    padding: 12px 16px;
+    background: rgba(251,191,36,.08);
+    border: 1px solid rgba(251,191,36,.25);
     border-radius: var(--r-sm);
-    background: rgba(167,139,250,.04);
-    border: 1px solid rgba(167,139,250,.07);
-    margin-bottom: 8px;
+    font-size: .82rem;
+    color: var(--yellow);
+    margin-bottom: 16px;
 }
-.jp-plan-num {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    background: var(--c-dim);
-    color: #fff;
-    font-size: .7rem;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-top: 1px;
-}
-.jp-plan-step-title { font-size: .84rem; font-weight: 600; color: var(--c-text); margin-bottom: 3px; }
-.jp-plan-step-desc  { font-size: .78rem; color: var(--c-muted); line-height: 1.5; }
 
-/* ─── PROMPT BAR ─────────────────────────────────────── */
-.jp-prompt-bar {
+.jp-steps { display: flex; flex-direction: column; gap: 8px; }
+.jp-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    border-radius: var(--r-sm);
+    transition: border-color var(--ease);
+}
+.jp-step:hover { border-color: var(--bd2); }
+.jp-step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--ac-hover);
+    color: var(--ac);
+    font-size: .72rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.jp-step-body { flex: 1; min-width: 0; }
+.jp-step-title { font-size: .84rem; font-weight: 600; color: var(--tx); margin-bottom: 3px; }
+.jp-step-desc { font-size: .76rem; color: var(--tx-muted); line-height: 1.5; }
+
+/* ── Input Bar ───────────────────────────────────────── */
+.jp-inputbar {
     display: flex;
     align-items: flex-end;
     gap: 10px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--c-border);
-    background: var(--c-panel);
+    padding: 12px 18px 14px;
+    border-top: 1px solid var(--bd);
+    background: var(--bg-panel);
     flex-shrink: 0;
 }
-
-.jp-prompt-input {
+.jp-inputbar-textarea {
     flex: 1;
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r);
-    color: var(--c-text);
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .875rem;
+    background: var(--bg-input);
+    border: 1px solid var(--bd);
+    border-radius: var(--r-sm);
+    color: var(--tx);
+    font-family: inherit;
+    font-size: .86rem;
+    line-height: 1.5;
     padding: 10px 14px;
     resize: none;
     outline: none;
-    transition: border-color .2s, box-shadow .2s;
-    min-height: 56px;
-    max-height: 140px;
-    line-height: 1.5;
-    direction: rtl;
+    transition: border-color var(--ease);
+    min-height: 48px;
 }
-.jp-prompt-input:focus {
-    border-color: var(--c-accent);
-    box-shadow: 0 0 0 3px rgba(167,139,250,.09);
-}
-.jp-prompt-input::placeholder { color: var(--c-faint); }
+.jp-inputbar-textarea:focus { border-color: var(--bd-focus); }
+.jp-inputbar-textarea::placeholder { color: var(--tx-faint); }
 
-/* ─── BUTTONS ────────────────────────────────────────── */
-.jp-btn-icon {
-    width: 32px; height: 32px;
-    border-radius: var(--r-sm);
-    background: rgba(167,139,250,.08);
-    border: 1px solid var(--c-border);
-    color: var(--c-muted);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-}
-.jp-btn-icon:hover { background: rgba(167,139,250,.18); color: var(--c-accent); }
-
-.jp-btn-send {
-    width: 46px; height: 46px;
-    border-radius: var(--r);
-    background: var(--c-dim);
-    border: none;
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background .15s, opacity .15s;
-}
-.jp-btn-send:hover:not(:disabled) { background: var(--c-accent); }
-.jp-btn-send:disabled { opacity: .4; cursor: not-allowed; }
-
-.jp-btn-primary {
-    background: var(--c-dim);
-    color: #fff;
-    border: none;
-    border-radius: var(--r-sm);
-    padding: 10px 22px;
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .875rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background .15s;
-}
-.jp-btn-primary:hover:not(:disabled) { background: var(--c-accent); }
-.jp-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-
-.jp-btn-ghost {
-    background: transparent;
-    color: var(--c-muted);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r-sm);
-    padding: 9px 18px;
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .875rem;
-    cursor: pointer;
-    transition: background .15s;
-}
-.jp-btn-ghost:hover { background: var(--c-hover); color: var(--c-text); }
-
-.jp-btn-approve {
-    background: rgba(251,191,36,.18);
-    color: var(--c-yellow);
-    border: 1px solid rgba(251,191,36,.35);
-    border-radius: var(--r-sm);
-    padding: 9px 18px;
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s;
-    white-space: nowrap;
-}
-.jp-btn-approve:hover { background: rgba(251,191,36,.28); }
-
-/* ─── DIALOG / OVERLAY ───────────────────────────────── */
-.jp-overlay {
+/* ── Modal / Dialog ──────────────────────────────────── */
+.jp-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.6);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 20px;
 }
 
-.jp-dialog {
-    background: var(--c-panel);
-    border: 1px solid var(--c-border2);
-    border-radius: 14px;
-    width: 460px;
-    max-width: calc(100vw - 32px);
-    box-shadow: 0 24px 60px rgba(0,0,0,.6);
-    animation: fadeUp .2s ease;
+.jp-modal {
+    background: var(--bg-modal);
+    border: 1px solid var(--bd2);
+    border-radius: var(--r-lg);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(167,139,250,.08);
+    animation: modal-in .2s cubic-bezier(.34,1.56,.64,1);
 }
+@keyframes modal-in {
+    from { opacity: 0; transform: scale(.95) translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+.jp-modal--wide { max-width: 560px; }
 
-.jp-dialog-head {
+.jp-modal-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--c-border);
-    font-size: .95rem;
-    font-weight: 700;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--bd);
+    flex-shrink: 0;
 }
-
-.jp-dialog-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-
-.jp-dialog-footer {
+.jp-modal-title {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--c-border);
+    gap: 8px;
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--tx);
+}
+.jp-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--bd);
+    background: transparent;
+    color: var(--tx-muted);
+    cursor: pointer;
+    transition: background var(--ease), color var(--ease);
+}
+.jp-modal-close:hover { background: var(--bg-hover); color: var(--tx); }
+
+.jp-modal-body {
+    overflow-y: auto;
+    padding: 18px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.jp-modal-body::-webkit-scrollbar { width: 4px; }
+.jp-modal-body::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+.jp-modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px 16px;
+    border-top: 1px solid var(--bd);
+    flex-shrink: 0;
 }
 
-/* ─── FORM FIELDS ────────────────────────────────────── */
-.jp-field { display: flex; flex-direction: column; gap: 6px; }
-.jp-field label { font-size: .8rem; color: var(--c-muted); }
+/* ── Form Elements (shared across dialogs) ───────────── */
+.jp-form-field { display: flex; flex-direction: column; gap: 5px; }
+.jp-form-row { display: flex; gap: 12px; }
+.jp-form-row .jp-form-field { flex: 1; }
 
-.jp-field input,
-.jp-field select,
-.jp-field textarea {
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
+.jp-form-label {
+    font-size: .73rem;
+    font-weight: 600;
+    color: var(--tx-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+.jp-form-optional { font-weight: 400; text-transform: none; opacity: .6; }
+.jp-form-req { color: var(--red); }
+
+.jp-form-input,
+.jp-form-select,
+.jp-form-textarea {
+    background: var(--bg-input);
+    border: 1px solid var(--bd);
     border-radius: var(--r-sm);
-    color: var(--c-text);
-    font-family: 'Vazirmatn', sans-serif;
-    font-size: .875rem;
+    color: var(--tx);
+    font-family: inherit;
+    font-size: .84rem;
     padding: 9px 12px;
     outline: none;
-    transition: border-color .18s;
-    direction: rtl;
+    transition: border-color var(--ease);
     width: 100%;
 }
+.jp-form-input:focus,
+.jp-form-select:focus,
+.jp-form-textarea:focus { border-color: var(--bd-focus); }
 
-.jp-field input:focus,
-.jp-field select:focus,
-.jp-field textarea:focus { border-color: var(--c-accent); }
+.jp-form-input::placeholder,
+.jp-form-textarea::placeholder { color: var(--tx-faint); }
 
-.jp-field select option { background: var(--c-card); }
+.jp-form-select { appearance: none; cursor: pointer; }
+.jp-form-select option { background: var(--bg-card); color: var(--tx); }
 
-.jp-field-check {
+.jp-form-textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+
+.jp-form-check {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: .85rem;
-    color: var(--c-muted);
+    gap: 8px;
+    font-size: .82rem;
+    color: var(--tx-muted);
     cursor: pointer;
 }
-.jp-field-check input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--c-accent); cursor: pointer; }
+.jp-form-check input[type="checkbox"] { accent-color: var(--ac); width: 15px; height: 15px; cursor: pointer; }
 
-/* ─── SPINNER ────────────────────────────────────────── */
-.jp-spinner {
-    width: 22px; height: 22px;
-    border: 2px solid rgba(167,139,250,.2);
-    border-top-color: var(--c-accent);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-}
-.jp-spinner.sm { width: 16px; height: 16px; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.jp-center {
-    display: flex; align-items: center; justify-content: center;
-    gap: 12px; padding: 36px; color: var(--c-muted);
-    font-size: .875rem;
+/* ── Section Label ───────────────────────────────────── */
+.jp-section-label {
+    font-size: .70rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--tx-faint);
+    margin-bottom: 4px;
 }
 
-.jp-empty-side {
-    padding: 20px;
-    text-align: center;
-    font-size: .78rem;
-    color: var(--c-faint);
+/* ── Account Cards (in modal) ────────────────────────── */
+.jp-acc-list { display: flex; flex-direction: column; gap: 6px; }
+.jp-acc-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    border-radius: var(--r-sm);
+    transition: border-color var(--ease);
 }
-
-/* ─── Scrollbar global ───────────────────────────────── */
-* { scrollbar-width: thin; scrollbar-color: var(--c-border) transparent; }
-
-/* ─── Blazor Error ───────────────────────────────────── */
-#blazor-error-ui {
-    background: rgba(248,113,113,.1);
-    border: 1px solid rgba(248,113,113,.25);
-    border-radius: var(--r);
-    display: none;
-    position: fixed;
-    bottom: 12px; left: 12px; right: 12px;
-    padding: 10px 16px;
-    z-index: 2000;
-}
-#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 14px; top: 10px; }
-
-/* ─── MudBlazor minimal overrides ───────────────────── */
-.mud-input-control .mud-input-root,
-.mud-typography,
-.mud-snackbar,
-.mud-button-root,
-.mud-chip { font-family: 'Vazirmatn', sans-serif !important; }
-
-/* ─── ACCOUNT BADGES & FOOTER ────────────────────────── */
-.jp-account-badge {
-    display: inline-flex;
+.jp-acc-card:hover { border-color: var(--bd2); }
+.jp-acc-avatar {
+    display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .62rem;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
+    font-size: .80rem;
+    font-weight: 800;
     color: #fff;
     flex-shrink: 0;
-    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+    user-select: none;
+    letter-spacing: -.5px;
 }
+.jp-acc-info { flex: 1; min-width: 0; }
+.jp-acc-name { font-size: .84rem; font-weight: 700; color: var(--tx); }
+.jp-acc-meta { font-size: .72rem; color: var(--tx-faint); margin-top: 2px; }
+.jp-acc-actions { display: flex; gap: 5px; }
 
-.jp-sidebar-footer {
-    padding: 10px;
-    border-top: 1px solid var(--c-border);
-    background: rgba(0,0,0,.15);
-    font-size: .72rem;
-}
-
-.jp-account-stat-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 3px 0;
-    color: var(--c-muted);
-}
-
-.jp-account-stat-item .acc-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.jp-account-stat-item .acc-count {
-    font-weight: 700;
-    font-size: .68rem;
-    background: rgba(167,139,250,.12);
-    padding: 1px 6px;
-    border-radius: 8px;
-    color: var(--c-accent2);
-}
-
-/* ─── ACCOUNT MANAGER MODAL ──────────────────────────── */
-.jp-acc-card {
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r);
-    padding: 12px 14px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: border-color .15s;
-}
-.jp-acc-card:hover { border-color: var(--c-border2); }
-
-.jp-acc-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.jp-acc-avatar-lg {
-    width: 36px;
-    height: 36px;
+/* ── Color Swatch Picker ─────────────────────────────── */
+.jp-color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.jp-color-swatch {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color var(--ease), transform var(--ease);
+    outline: none;
+}
+.jp-color-swatch:hover { transform: scale(1.15); }
+.jp-color-swatch--active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px var(--ac);
+    transform: scale(1.12);
+}
+
+/* ── Divider ─────────────────────────────────────────── */
+.jp-divider { border: none; border-top: 1px solid var(--bd); margin: 2px 0; }
+
+/* ── States: spinner, empty ──────────────────────────── */
+.jp-state-center {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: .85rem;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    gap: 10px;
+    padding: 28px 0;
+    color: var(--tx-faint);
+}
+.jp-state-label { font-size: .80rem; color: var(--tx-faint); }
+.jp-empty-state {
+    text-align: center;
+    padding: 24px 0;
+    font-size: .80rem;
+    color: var(--tx-faint);
 }
 
-.jp-acc-name {
-    font-size: .88rem;
-    font-weight: 600;
-    color: var(--c-text);
-}
-
-.jp-acc-email {
-    font-size: .74rem;
-    color: var(--c-faint);
-}
-
-.jp-color-dots {
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-}
-.jp-color-dot {
-    width: 22px; height: 22px;
+/* ── Spinner ─────────────────────────────────────────── */
+.jp-spin {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--bd2);
+    border-top-color: var(--ac);
     border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: transform .15s;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
 }
-.jp-color-dot:hover { transform: scale(1.15); }
-.jp-color-dot.active { border-color: #fff; transform: scale(1.15); }
+.jp-spin--sm { width: 14px; height: 14px; border-width: 1.5px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Blazor internals ────────────────────────────────── */
+#components-reconnect-modal { display: none !important; }
+#blazor-error-ui            { display: none !important; }
