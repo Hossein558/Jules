@@ -47,6 +47,95 @@
     --ease: .15s ease;
 }
 
+/* ── Light Theme Token Overrides ────────────────────── */
+/* Applied by toggling class="light-theme" on <body> via JS  */
+body.light-theme {
+    /* Backgrounds — clean white/gray surface system */
+    --bg-base:   #f4f5f7;
+    --bg-panel:  #ffffff;
+    --bg-card:   #f9fafb;
+    --bg-hover:  #eef0f4;
+    --bg-active: #e8ebf5;
+    --bg-input:  #ffffff;
+    --bg-modal:  #ffffff;
+
+    /* Borders — subtle cool-gray */
+    --bd:        rgba(99,102,130,.14);
+    --bd2:       rgba(99,102,130,.32);
+    --bd-focus:  rgba(109,40,217,.55);
+
+    /* Text — very high contrast */
+    --tx:        #111827;
+    --tx-muted:  #4b5563;
+    --tx-faint:  #9ca3af;
+    --tx-invert: #ffffff;
+
+    /* Accent — richer purple that pops on light backgrounds */
+    --ac:        #7c3aed;
+    --ac-dim:    #6d28d9;
+    --ac-glow:   rgba(109,40,217,.18);
+    --ac-hover:  rgba(109,40,217,.10);
+
+    /* Semantics stay the same — already vivid enough */
+    --green:   #059669;
+    --yellow:  #d97706;
+    --red:     #dc2626;
+    --blue:    #2563eb;
+}
+
+/* Light theme — MudBlazor AppBar override */
+body.light-theme .mud-appbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid rgba(99,102,130,.18) !important;
+    box-shadow: 0 1px 12px rgba(0,0,0,.08) !important;
+    color: #111827 !important;
+}
+body.light-theme .mud-appbar .mud-icon-root,
+body.light-theme .mud-appbar svg { color: #7c3aed !important; fill: #7c3aed !important; }
+body.light-theme .mud-text { color: #111827 !important; }
+
+/* Light theme — spinner border */
+body.light-theme .jp-spin {
+    border-color: rgba(99,102,130,.2);
+    border-top-color: var(--ac);
+}
+
+/* Light theme — session active accent bar */
+body.light-theme .jp-sess-card--active::before { background: var(--ac); }
+
+/* Light theme — button shadows */
+body.light-theme .jp-btn--primary {
+    box-shadow: 0 2px 10px rgba(109,40,217,.25);
+}
+
+/* Light theme — welcome glyph glow adapts */
+body.light-theme .jp-welcome-glyph {
+    filter: drop-shadow(0 0 18px rgba(109,40,217,.35));
+}
+@keyframes pulse-glyph-light {
+    0%, 100% { filter: drop-shadow(0 0 18px rgba(109,40,217,.3)); }
+    50%       { filter: drop-shadow(0 0 30px rgba(109,40,217,.6)); }
+}
+body.light-theme .jp-welcome-glyph { animation: pulse-glyph-light 3s ease-in-out infinite; }
+
+/* Light theme — modal overlay */
+body.light-theme .jp-backdrop { background: rgba(17,24,39,.5); }
+
+/* Light theme — status badge adjustments */
+body.light-theme .jp-status-badge--working { background: rgba(109,40,217,.1);  color: #6d28d9; }
+body.light-theme .jp-status-badge--done    { background: rgba(5,150,105,.10);  color: #047857; }
+body.light-theme .jp-status-badge--error   { background: rgba(220,38,38,.10);  color: #b91c1c; }
+body.light-theme .jp-status-badge--idle    { background: rgba(37,99,235,.10);  color: #1d4ed8; }
+
+/* Smooth theme transition on all color-bearing properties */
+body, .mud-appbar, .jp-sidebar, .jp-main, .jp-titlebar,
+.jp-tabs, .jp-sess-card, .jp-acc-card, .jp-modal,
+.jp-inputbar, .jp-inputbar-textarea, .jp-icon-btn,
+.jp-btn, .jp-bubble, .jp-step {
+    transition: background-color .25s ease, border-color .25s ease,
+                color .25s ease, box-shadow .25s ease;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {

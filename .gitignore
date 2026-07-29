@@ -43,3 +43,4 @@ bld/
 # AppSettings (secrets)
 appsettings.Development.json
 appsettings.json
+accounts.json
