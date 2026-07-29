@@ -30,10 +30,25 @@ public class AccountService
 
     // ── Read ──────────────────────────────────────────────────────────────────
 
-    public IReadOnlyList<AccountProfile> GetAll() => _accounts.AsReadOnly();
+    public IReadOnlyList<AccountProfile> GetAll()
+    {
+        _lock.Wait();
+        try
+        {
+            return _accounts.ToList().AsReadOnly();
+        }
+        finally { _lock.Release(); }
+    }
 
-    public AccountProfile? GetById(string id) =>
-        _accounts.FirstOrDefault(a => a.Id == id);
+    public AccountProfile? GetById(string id)
+    {
+        _lock.Wait();
+        try
+        {
+            return _accounts.FirstOrDefault(a => a.Id == id);
+        }
+        finally { _lock.Release(); }
+    }
 
     // ── Write ─────────────────────────────────────────────────────────────────
 

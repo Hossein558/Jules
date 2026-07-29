@@ -551,47 +551,93 @@
     static readonly string[] AvailableColors = new[] { "#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#f87171", "#ec4899", "#8b5cf6" };
 
     System.Threading.Timer? _timer;
+    bool _disposed;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadSessions();
         _timer = new System.Threading.Timer(async _ =>
         {
-            if (_sel?.IsWorking == true || _sel?.NeedsPlanApproval == true)
-                await InvokeAsync(async () => { await Refresh(); StateHasChanged(); });
+            try
+            {
+                if (_disposed) return;
+                if (_sel?.IsWorking == true || _sel?.NeedsPlanApproval == true)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        if (_disposed) return;
+                        await Refresh();
+                        StateHasChanged();
+                    });
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Circuit/component was disposed mid-tick — safe to ignore.
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Background polling error: {ex.Message}");
+            }
         }, null, 8000, 8000);
     }
 
     async Task LoadSessions()
     {
         _loadSess = true; StateHasChanged();
+        try
+        {
+            _sessions = await FetchAllSessionsAsync();
+            if (_sel != null) _sel = _sessions.FirstOrDefault(s => s.Id == _sel.Id) ?? _sel;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LoadSessions error: {ex.Message}");
+            Snackbar.Add("خطا در بارگذاری جلسات", Severity.Error);
+        }
+        finally
+        {
+            _loadSess = false; StateHasChanged();
+        }
+    }
+
+    async Task<List<Session>> FetchAllSessionsAsync()
+    {
         var accounts = AccountSvc.GetAll();
         var combined = new List<Session>();
 
         if (accounts.Count > 0)
         {
-            foreach (var acc in accounts)
+            var tasks = accounts.Select(async acc =>
             {
-                var list = await JulesApi.ListSessionsAsync(acc.ApiKey);
-                foreach (var s in list)
+                try
                 {
-                    s.AccountId = acc.Id;
-                    s.AccountName = acc.Name;
-                    s.AccountColor = acc.Color;
-                    combined.Add(s);
+                    var list = await JulesApi.ListSessionsAsync(acc.ApiKey);
+                    foreach (var s in list)
+                    {
+                        s.AccountId = acc.Id;
+                        s.AccountName = acc.Name;
+                        s.AccountColor = acc.Color;
+                    }
+                    return list;
                 }
-            }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed loading sessions for account {acc.Name}: {ex.Message}");
+                    return new List<Session>();
+                }
+            }).ToList();
+
+            var results = await Task.WhenAll(tasks);
+            foreach (var list in results) combined.AddRange(list);
         }
         else
         {
             // Fallback to default config API key
-            var list = await JulesApi.ListSessionsAsync();
-            combined.AddRange(list);
+            combined.AddRange(await JulesApi.ListSessionsAsync());
         }
 
-        _sessions = combined.OrderByDescending(s => s.CreateTime).ToList();
-        if (_sel != null) _sel = _sessions.FirstOrDefault(s => s.Id == _sel.Id) ?? _sel;
-        _loadSess = false; StateHasChanged();
+        return combined.OrderByDescending(s => s.CreateTime).ToList();
     }
 
     async Task Pick(Session s)
@@ -777,7 +823,8 @@
         }
 
         ResetAccForm();
-        await LoadSessions();
+        StateHasChanged();
+        _ = RefreshSessionsInBackground();
     }
 
     async Task DeleteAccount(string id)
@@ -785,7 +832,29 @@
         if (await AccountSvc.DeleteAsync(id))
         {
             Snackbar.Add("اکانت حذف شد", Severity.Info);
-            await LoadSessions();
+            _sessions.RemoveAll(s => s.AccountId == id);
+            if (_sel?.AccountId == id) _sel = null;
+            StateHasChanged();
+            _ = RefreshSessionsInBackground();
+        }
+    }
+
+    async Task RefreshSessionsInBackground()
+    {
+        try
+        {
+            var combined = await FetchAllSessionsAsync();
+            await InvokeAsync(() =>
+            {
+                if (_disposed) return;
+                _sessions = combined;
+                if (_sel != null) _sel = _sessions.FirstOrDefault(s => s.Id == _sel.Id) ?? _sel;
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"RefreshSessionsInBackground error: {ex.Message}");
         }
     }
 
@@ -830,5 +899,9 @@
 
     string _tabClass(int idx) => _tab == idx ? "active" : "";
 
-    public void Dispose() => _timer?.Dispose();
+    public void Dispose()
+    {
+        _disposed = true;
+        _timer?.Dispose();
+    }
 }
