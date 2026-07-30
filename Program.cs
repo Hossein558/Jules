@@ -3,6 +3,7 @@ using MudBlazor.Services;
 using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseStaticWebAssets();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
