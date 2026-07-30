@@ -1,5 +1,6 @@
 using JulesPanel.Services;
 using MudBlazor.Services;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.AddRazorComponents()
     });
 
 builder.Services.AddMudServices();
+builder.Services.AddSyncfusionBlazor();
 
 builder.Services.AddHttpClient<JulesApiService>(client =>
 {
@@ -19,6 +21,8 @@ builder.Services.AddHttpClient<JulesApiService>(client =>
 });
 
 builder.Services.AddSingleton<AccountService>();
+
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MTIzQDMzMzEyZTMwMmUzMDNiMzMzMTNiR0VoN2NVYVlJaHVIRHpqeTgxakxVVktQUmhUWkgvdzlUQVRtTW9XYXNmVT0=");
 
 var app = builder.Build();
 
