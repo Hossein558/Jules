@@ -924,3 +924,188 @@ html, body {
 /* ── Blazor internals ────────────────────────────────── */
 #components-reconnect-modal { display: none !important; }
 #blazor-error-ui            { display: none !important; }
+.jp-view-toggle {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+}
+
+.jp-view-toggle-btn {
+    width: 30px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    opacity: .62;
+}
+
+.jp-view-toggle-btn:hover,
+.jp-view-toggle-btn--active {
+    background: var(--surface);
+    opacity: 1;
+}
+
+.jp-kanban-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+}
+
+.jp-kanban-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.jp-kanban-title,
+.jp-kanban-controls,
+.jp-kanban-submodes,
+.jp-kb-card-header,
+.jp-kb-card-footer,
+.jp-simple-card-topline {
+    display: flex;
+    align-items: center;
+}
+
+.jp-kanban-title {
+    gap: 8px;
+    font-weight: 700;
+}
+
+.jp-kanban-count {
+    color: var(--text-muted);
+    font-size: .78rem;
+    font-weight: 500;
+}
+
+.jp-kanban-controls {
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.jp-kanban-submodes {
+    gap: 4px;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--surface-2);
+}
+
+.jp-kanban-submode-btn {
+    border: 0;
+    border-radius: 7px;
+    padding: 7px 10px;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+}
+
+.jp-kanban-submode-btn:hover,
+.jp-kanban-submode-btn--active {
+    color: var(--text);
+    background: var(--surface);
+}
+
+.jp-kanban-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+}
+
+.jp-kanban-body .e-kanban {
+    min-width: 760px;
+}
+
+.jp-kb-card,
+.jp-simple-card {
+    width: 100%;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    text-align: start;
+    font: inherit;
+    cursor: pointer;
+}
+
+.jp-kb-card {
+    display: grid;
+    gap: 9px;
+}
+
+.jp-kb-card-header,
+.jp-kb-card-footer {
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.jp-kb-card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jp-kb-card-prompt,
+.jp-simple-card-prompt {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: .78rem;
+    line-height: 1.55;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.jp-kb-card-footer,
+.jp-simple-card-meta {
+    color: var(--text-muted);
+    font-size: .7rem;
+}
+
+.jp-simple-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+}
+
+.jp-simple-card {
+    display: grid;
+    gap: 12px;
+    min-height: 160px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--surface);
+    box-shadow: 0 6px 18px rgb(15 23 42 / 5%);
+}
+
+.jp-simple-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.jp-simple-card-topline {
+    gap: 7px;
+    color: var(--text-muted);
+    font-size: .76rem;
+}
+
+.jp-simple-card-topline .jp-status-badge {
+    margin-inline-start: auto;
+}
+
+@media (max-width: 900px) {
+    .jp-kanban-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

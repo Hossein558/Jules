@@ -4,6 +4,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @implements IDisposable
+@using Syncfusion.Blazor.Kanban
 
 <PageTitle>Jules Panel</PageTitle>
 
@@ -18,6 +19,20 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
                 جلسات
             </span>
+            <div class="jp-view-toggle" role="group" aria-label="انتخاب نمای جلسات">
+                <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.List ? "jp-view-toggle-btn--active" : "")"
+                        title="نمای لیستی"
+                        aria-pressed="@(_mainViewMode == MainViewMode.List)"
+                        @onclick="() => _mainViewMode = MainViewMode.List">
+                    📋
+                </button>
+                <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.Kanban ? "jp-view-toggle-btn--active" : "")"
+                        title="نمای کانبان"
+                        aria-pressed="@(_mainViewMode == MainViewMode.Kanban)"
+                        @onclick="() => _mainViewMode = MainViewMode.Kanban">
+                    📊
+                </button>
+            </div>
             <div class="jp-head-actions">
                 <button class="jp-icon-btn" title="تغییر پوسته" @onclick="ToggleTheme">
                     @if (_isLightMode)
@@ -81,7 +96,118 @@
     <!-- ══════════ MAIN PANEL ══════════ -->
     <div class="jp-main">
 
-        @if (_sel == null)
+        @if (_mainViewMode == MainViewMode.Kanban)
+        {
+            <section class="jp-kanban-wrapper" aria-label="تخته کانبان جلسات">
+                <div class="jp-kanban-toolbar">
+                    <div class="jp-kanban-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        تخته کانبان جلسات
+                        <span class="jp-kanban-count">@KanbanCards.Count جلسه</span>
+                    </div>
+                    <div class="jp-kanban-controls">
+                        <div class="jp-kanban-submodes" role="group" aria-label="حالت کانبان">
+                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.Status ? "jp-kanban-submode-btn--active" : "")"
+                                    @onclick="() => _kanbanMode = KanbanViewMode.Status">
+                                بر اساس وضعیت
+                            </button>
+                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.AccountSwimlanes ? "jp-kanban-submode-btn--active" : "")"
+                                    @onclick="() => _kanbanMode = KanbanViewMode.AccountSwimlanes">
+                                اکانت + وضعیت
+                            </button>
+                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.SimpleCards ? "jp-kanban-submode-btn--active" : "")"
+                                    @onclick="() => _kanbanMode = KanbanViewMode.SimpleCards">
+                                کارت‌های ساده
+                            </button>
+                        </div>
+                        <button class="jp-btn jp-btn--primary jp-btn--sm" @onclick="OpenCreateDialog">+ جلسه جدید</button>
+                    </div>
+                </div>
+
+                <div class="jp-kanban-body">
+                    @if (_loadSess)
+                    {
+                        <div class="jp-state-center"><div class="jp-spin"></div></div>
+                    }
+                    else if (!KanbanCards.Any())
+                    {
+                        <div class="jp-empty-state">هیچ جلسه‌ای برای نمایش وجود ندارد.</div>
+                    }
+                    else
+                    {
+                        @switch (_kanbanMode)
+                        {
+                            case KanbanViewMode.Status:
+                                <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
+                                    <KanbanColumns>
+                                        @foreach (var column in KanbanStatusColumns)
+                                        {
+                                            <KanbanColumn HeaderText="@column.Header" KeyField="@column.Keys" />
+                                        }
+                                    </KanbanColumns>
+                                    <KanbanCardSettings HeaderField="Title">
+                                        <Template>
+                                            @{
+                                                var card = context as KanbanCardItem;
+                                            }
+                                            @if (card != null)
+                                            {
+                                                @RenderKanbanCard(card, true)
+                                            }
+                                        </Template>
+                                    </KanbanCardSettings>
+                                </SfKanban>
+                                break;
+
+                            case KanbanViewMode.AccountSwimlanes:
+                                <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
+                                    <KanbanColumns>
+                                        @foreach (var column in KanbanStatusColumns)
+                                        {
+                                            <KanbanColumn HeaderText="@column.Header" KeyField="@column.Keys" />
+                                        }
+                                    </KanbanColumns>
+                                    <KanbanSwimlaneSettings KeyField="AccountName" TextField="AccountName" />
+                                    <KanbanCardSettings HeaderField="Title">
+                                        <Template>
+                                            @{
+                                                var card = context as KanbanCardItem;
+                                            }
+                                            @if (card != null)
+                                            {
+                                                @RenderKanbanCard(card, false)
+                                            }
+                                        </Template>
+                                    </KanbanCardSettings>
+                                </SfKanban>
+                                break;
+
+                            case KanbanViewMode.SimpleCards:
+                                <div class="jp-simple-card-grid">
+                                    @foreach (var card in KanbanCards)
+                                    {
+                                        <button class="jp-simple-card" @onclick="() => OpenSessionFromKanban(card.Session)">
+                                            <span class="jp-simple-card-topline">
+                                                <span class="jp-acc-pip" style="background:@card.AccountColor"></span>
+                                                <span>@card.AccountName</span>
+                                                <span class="jp-status-badge jp-status-badge--@BadgeKey(card.Status)">@card.Status</span>
+                                            </span>
+                                            <strong>@card.Title</strong>
+                                            @if (!string.IsNullOrWhiteSpace(card.Prompt))
+                                            {
+                                                <span class="jp-simple-card-prompt">@card.Prompt</span>
+                                            }
+                                            <span class="jp-simple-card-meta">@card.CreatedAt</span>
+                                        </button>
+                                    }
+                                </div>
+                                break;
+                        }
+                    }
+                </div>
+            </section>
+        }
+        else if (_sel == null)
         {
             <div class="jp-welcome">
                 <div class="jp-welcome-glyph">⚡</div>
@@ -482,6 +608,55 @@
     System.Threading.Timer? _timer;
     bool _disposed;
     bool _isLightMode = true;
+    MainViewMode _mainViewMode = MainViewMode.List;
+    KanbanViewMode _kanbanMode = KanbanViewMode.Status;
+
+    enum MainViewMode
+    {
+        List,
+        Kanban
+    }
+
+    enum KanbanViewMode
+    {
+        Status,
+        AccountSwimlanes,
+        SimpleCards
+    }
+
+    sealed class KanbanCardItem
+    {
+        public string Id { get; init; } = string.Empty;
+        public string Title { get; init; } = string.Empty;
+        public string Prompt { get; init; } = string.Empty;
+        public string Status { get; init; } = string.Empty;
+        public string AccountName { get; init; } = string.Empty;
+        public string AccountColor { get; init; } = string.Empty;
+        public string CreatedAt { get; init; } = string.Empty;
+        public Session Session { get; init; } = default!;
+    }
+
+    sealed record KanbanColumnDefinition(string Header, List<string> Keys);
+
+    List<KanbanCardItem> KanbanCards => _sessions.Select(session => new KanbanCardItem
+    {
+        Id = session.Id,
+        Title = string.IsNullOrWhiteSpace(session.Title) ? session.Id : session.Title,
+        Prompt = session.Prompt,
+        Status = NormalizeKanbanStatus(session.State),
+        AccountName = ResolveAccountName(session),
+        AccountColor = string.IsNullOrWhiteSpace(session.AccountColor) ? "#a78bfa" : session.AccountColor,
+        CreatedAt = session.CreateTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—",
+        Session = session
+    }).ToList();
+
+    List<KanbanColumnDefinition> KanbanStatusColumns => KanbanCards
+        .Select(card => card.Status)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(StatusSortOrder)
+        .ThenBy(status => status, StringComparer.OrdinalIgnoreCase)
+        .Select(status => new KanbanColumnDefinition(StatusHeader(status), [status]))
+        .ToList();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -584,6 +759,12 @@
         _sel = s; _tab = 0; _activities = new(); _plan = null;
         StateHasChanged();
         await LoadAct();
+    }
+
+    async Task OpenSessionFromKanban(Session session)
+    {
+        _mainViewMode = MainViewMode.List;
+        await Pick(session);
     }
 
     string? SelectedApiKey()
@@ -791,6 +972,54 @@
             </div>
         }
     };
+
+    RenderFragment RenderKanbanCard(KanbanCardItem card, bool showAccount) => __builder =>
+    {
+        <button class="jp-kb-card" @onclick="() => OpenSessionFromKanban(card.Session)">
+            <span class="jp-kb-card-header">
+                <strong class="jp-kb-card-title">@card.Title</strong>
+                @if (showAccount)
+                {
+                    <span class="jp-acc-badge" style="background:@card.AccountColor" title="@card.AccountName">
+                        @GetInitials(card.AccountName)
+                    </span>
+                }
+                else
+                {
+                    <span class="jp-status-badge jp-status-badge--@BadgeKey(card.Status)">@card.Status</span>
+                }
+            </span>
+            @if (!string.IsNullOrWhiteSpace(card.Prompt))
+            {
+                <span class="jp-kb-card-prompt">@card.Prompt</span>
+            }
+            <span class="jp-kb-card-footer">
+                <span>@(showAccount ? card.AccountName : card.Id)</span>
+                <span>@card.CreatedAt</span>
+            </span>
+        </button>
+    };
+
+    static string NormalizeKanbanStatus(string? state) =>
+        string.IsNullOrWhiteSpace(state) ? "UNKNOWN" : state.Trim().ToUpperInvariant();
+
+    static string ResolveAccountName(Session session) =>
+        string.IsNullOrWhiteSpace(session.AccountName) ? "بدون اکانت" : session.AccountName.Trim();
+
+    int StatusSortOrder(string status)
+    {
+        if (IsWorking(status)) return 0;
+        if (status.Contains("PLAN", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("WAIT", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("AWAIT", StringComparison.OrdinalIgnoreCase)) return 1;
+        if (IsDone(status)) return 2;
+        if (IsArchived(status)) return 3;
+        if (status.Contains("ERROR", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("FAIL", StringComparison.OrdinalIgnoreCase)) return 4;
+        return 5;
+    }
+
+    static string StatusHeader(string status) => status.Replace('_', ' ');
 
     string GetInitials(string? name) =>
         string.IsNullOrWhiteSpace(name) ? "?"
