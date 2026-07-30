@@ -18,6 +18,14 @@
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
                 جلسات
             </span>
+            <div class="jp-view-toggle">
+                <button class="jp-view-toggle-btn @(_mainViewMode == "List" ? "jp-view-toggle-btn--active" : "")" title="نمای لیستی" @onclick='() => _mainViewMode = "List"'>
+                    📋
+                </button>
+                <button class="jp-view-toggle-btn @(_mainViewMode == "Kanban" ? "jp-view-toggle-btn--active" : "")" title="نمای کانبان" @onclick='() => _mainViewMode = "Kanban"'>
+                    📊
+                </button>
+            </div>
             <div class="jp-head-actions">
                 <button class="jp-icon-btn" title="تغییر پوسته" @onclick="ToggleTheme">
                     @if (_isLightMode)
@@ -81,7 +89,138 @@
     <!-- ══════════ MAIN PANEL ══════════ -->
     <div class="jp-main">
 
-        @if (_sel == null)
+        @if (_mainViewMode == "Kanban")
+        {
+            <div class="jp-kanban-wrapper">
+                <div class="jp-kanban-toolbar">
+                    <div class="jp-kanban-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        تخته کانبان جلسات
+                        <span class="jp-sess-time" style="font-size: .80rem">(@KanbanCards.Count جلسه)</span>
+                    </div>
+
+                    <div class="jp-kanban-controls">
+                        <div class="jp-kanban-submodes">
+                            <button class="jp-kanban-submode-btn @(_kanbanSubMode == "Status" ? "jp-kanban-submode-btn--active" : "")" @onclick='() => _kanbanSubMode = "Status"'>
+                                📌 بر اساس وضعیت
+                            </button>
+                            <button class="jp-kanban-submode-btn @(_kanbanSubMode == "Swimlane" ? "jp-kanban-submode-btn--active" : "")" @onclick='() => _kanbanSubMode = "Swimlane"'>
+                                👤 شناور اکانت‌ها
+                            </button>
+                            <button class="jp-kanban-submode-btn @(_kanbanSubMode == "Simple" ? "jp-kanban-submode-btn--active" : "")" @onclick='() => _kanbanSubMode = "Simple"'>
+                                🃏 کارت‌های ساده
+                            </button>
+                        </div>
+
+                        <button class="jp-btn jp-btn--primary jp-btn--sm" @onclick="OpenCreateDialog">
+                            + جلسه جدید
+                        </button>
+                    </div>
+                </div>
+
+                <div class="jp-kanban-body">
+                    @if (_kanbanSubMode == "Status")
+                    {
+                        <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
+                            <KanbanColumns>
+                                <KanbanColumn HeaderText="🟡 در حال کار" KeyField="@(new List<string> { "در حال کار" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="⚡ منتظر تأیید" KeyField="@(new List<string> { "منتظر تأیید" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="✅ تکمیل شده" KeyField="@(new List<string> { "تکمیل شده" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="📦 آرشیو" KeyField="@(new List<string> { "آرشیو" })"></KanbanColumn>
+                            </KanbanColumns>
+                            <KanbanCardSettings HeaderField="Title">
+                                <Template>
+                                    @{
+                                        var card = (context as KanbanCardItem);
+                                        if (card != null)
+                                        {
+                                            <div class="jp-kb-card" @onclick="() => Pick(card.RawSession)">
+                                                <div class="jp-kb-card-header">
+                                                    <span class="jp-kb-card-title">@card.Title</span>
+                                                    <span class="jp-acc-badge" style="background:@card.AccountColor" title="@card.AccountName">
+                                                        @GetInitials(card.AccountName)
+                                                    </span>
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(card.Prompt))
+                                                {
+                                                    <div class="jp-kb-card-prompt">@card.Prompt</div>
+                                                }
+                                                <div class="jp-kb-card-footer">
+                                                    <span>👤 @card.AccountName</span>
+                                                    <span>@card.CreateTimeFormatted</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </Template>
+                            </KanbanCardSettings>
+                        </SfKanban>
+                    }
+                    else if (_kanbanSubMode == "Swimlane")
+                    {
+                        <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
+                            <KanbanColumns>
+                                <KanbanColumn HeaderText="🟡 در حال کار" KeyField="@(new List<string> { "در حال کار" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="⚡ منتظر تأیید" KeyField="@(new List<string> { "منتظر تأیید" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="✅ تکمیل شده" KeyField="@(new List<string> { "تکمیل شده" })"></KanbanColumn>
+                                <KanbanColumn HeaderText="📦 آرشیو" KeyField="@(new List<string> { "آرشیو" })"></KanbanColumn>
+                            </KanbanColumns>
+                            <KanbanSwimlaneSettings KeyField="AccountName" AllowDragAndDrop="true" TextField="AccountName"></KanbanSwimlaneSettings>
+                            <KanbanCardSettings HeaderField="Title">
+                                <Template>
+                                    @{
+                                        var card = (context as KanbanCardItem);
+                                        if (card != null)
+                                        {
+                                            <div class="jp-kb-card" @onclick="() => Pick(card.RawSession)">
+                                                <div class="jp-kb-card-header">
+                                                    <span class="jp-kb-card-title">@card.Title</span>
+                                                    <span class="jp-status-badge jp-status-badge--@BadgeKey(card.RawSession.State)">@card.Status</span>
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(card.Prompt))
+                                                {
+                                                    <div class="jp-kb-card-prompt">@card.Prompt</div>
+                                                }
+                                                <div class="jp-kb-card-footer">
+                                                    <span>🆔 @card.Id</span>
+                                                    <span>@card.CreateTimeFormatted</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </Template>
+                            </KanbanCardSettings>
+                        </SfKanban>
+                    }
+                    else if (_kanbanSubMode == "Simple")
+                    {
+                        <div class="jp-cards-grid">
+                            @foreach (var card in KanbanCards)
+                            {
+                                <div class="jp-simple-card" @onclick="() => Pick(card.RawSession)">
+                                    <div class="jp-kb-card-header">
+                                        <span class="jp-acc-badge" style="background:@card.AccountColor" title="@card.AccountName">
+                                            @GetInitials(card.AccountName)
+                                        </span>
+                                        <span class="jp-status-badge jp-status-badge--@BadgeKey(card.RawSession.State)">@card.Status</span>
+                                    </div>
+                                    <div class="jp-kb-card-title" style="font-size: .92rem;">@card.Title</div>
+                                    @if (!string.IsNullOrWhiteSpace(card.Prompt))
+                                    {
+                                        <div class="jp-kb-card-prompt">@card.Prompt</div>
+                                    }
+                                    <div class="jp-kb-card-footer">
+                                        <span>👤 @card.AccountName</span>
+                                        <span>@card.CreateTimeFormatted</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (_sel == null)
         {
             <div class="jp-welcome">
                 <div class="jp-welcome-glyph">⚡</div>
@@ -482,6 +621,42 @@
     System.Threading.Timer? _timer;
     bool _disposed;
     bool _isLightMode = true;
+
+    // ── View Modes ────────────────────────────────────────────────────────────
+    string _mainViewMode = "List";   // "List" or "Kanban"
+    string _kanbanSubMode = "Status"; // "Status", "Swimlane", "Simple"
+
+    public class KanbanCardItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Prompt { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string AccountName { get; set; } = string.Empty;
+        public string AccountColor { get; set; } = string.Empty;
+        public string CreateTimeFormatted { get; set; } = string.Empty;
+        public Session RawSession { get; set; } = default!;
+    }
+
+    List<KanbanCardItem> KanbanCards => _sessions.Select(s => new KanbanCardItem
+    {
+        Id = s.Id,
+        Title = string.IsNullOrWhiteSpace(s.Title) ? s.Id : s.Title,
+        Prompt = s.Prompt,
+        Status = GetKanbanStatus(s),
+        AccountName = string.IsNullOrWhiteSpace(s.AccountName) ? "ناشناس" : s.AccountName,
+        AccountColor = string.IsNullOrWhiteSpace(s.AccountColor) ? "#a78bfa" : s.AccountColor,
+        CreateTimeFormatted = s.CreateTime?.ToString("MM/dd HH:mm") ?? "—",
+        RawSession = s
+    }).ToList();
+
+    static string GetKanbanStatus(Session s)
+    {
+        if (s.IsWorking) return "در حال کار";
+        if (s.NeedsPlanApproval) return "منتظر تأیید";
+        if (s.IsArchived) return "آرشیو";
+        return "تکمیل شده";
+    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
