@@ -1,11 +1,7 @@
-using Syncfusion.Blazor;
 using JulesPanel.Services;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MTIzQDMzMzEyZTMwMmUzMDNiMzMzMTNiR0VoN2NVYVlJaHVIRHpqeTgxakxVVktQUmhUWkgvdzlUQVRtTW9XYXNmVT0=");
-builder.Services.AddSyncfusionBlazor();
-
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
