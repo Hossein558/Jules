@@ -33,7 +33,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// In production (published), serve wwwroot/_content properly
 app.UseStaticFiles();
 app.UseAntiforgery();
 
