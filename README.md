@@ -1,6 +1,6 @@
 # Jules Panel
 
-A modern, responsive, and beautifully designed web panel for interacting with the **Jules API** (Google's agentic coding platform). Built with **.NET 8 Blazor Server** and a fully customized CSS UI (Glassmorphism & Dark Premium Theme).
+A modern, responsive, and beautifully designed web panel for interacting with the **Jules API** (Google's agentic coding platform). Built with **.NET 8 Blazor Server**, **Syncfusion Blazor Kanban**, and a fully customized CSS UI (Glassmorphism & Dark Premium Theme).
 
 ## 🌟 Features
 
@@ -9,6 +9,20 @@ A modern, responsive, and beautifully designed web panel for interacting with th
   - Create new sessions with a starting prompt.
   - Automatically load branches for private/public GitHub repositories linked to Jules.
   - Require plan approval before agent execution.
+
+- **Syncfusion Kanban Board (Jira-Style):**
+  - Toggle between **Legacy List View** and **Syncfusion Kanban Views**:
+    - **Status-based Kanban Board:** Categorized by Pending, Working, Completed, Archived, and Error states.
+    - **Account + Status Swimlanes:** Grouped into account swimlanes for multi-account management.
+    - **Simple Cards Grid:** Compact grid layout.
+  - **Jira-Style Compact Cards:** Custom card templates displaying session title, shortened ID, and account badge avatar without cluttered prompt text.
+
+- **Redesigned Header & Navigation:**
+  - 2-row sidebar header featuring dedicated quick-action buttons (`سشن جدید` / New Session, `مدیریت اکانت‌ها` / Account Management, Theme Toggle, and Refresh) that remain permanently accessible regardless of session selection or screen width.
+
+- **Multi-Account & License Integration:**
+  - Multi-account management and account stats panel.
+  - Syncfusion v31.1.17 integration with valid registered license.
 
 - **Activity Tracking:**
   - Real-time display of Jules's activities.
@@ -22,7 +36,7 @@ A modern, responsive, and beautifully designed web panel for interacting with th
 
 - **Premium UI/UX:**
   - A highly responsive, full-width application layout.
-  - Pure CSS tabs and customized layout (No heavy JS interop reliance for structural elements).
+  - Pure CSS tabs and customized layout.
   - RTL (Right-to-Left) native support out of the box.
 
 ## 🚀 Getting Started
@@ -59,15 +73,16 @@ A modern, responsive, and beautifully designed web panel for interacting with th
 
 ## 📁 Project Structure
 
-- `Components/Pages/Home.razor`: The core UI, layout structure, and state management.
-- `wwwroot/app.css`: The customized CSS stylesheet implementing the dark premium theme.
+- `Components/Pages/Home.razor`: The core UI, Kanban integration, layout structure, and state management.
+- `wwwroot/app.css`: The customized CSS stylesheet implementing the dark premium theme and Syncfusion Kanban overrides.
 - `Models/JulesModels.cs`: C# Data Transfer Objects (DTOs) mapping to the Jules API responses.
 - `Services/JulesApiService.cs`: The HTTP client wrapper handling authentication, serialization, and all endpoints.
 
 ## 🛠 Tech Stack
 
 - **Framework:** .NET 8 Blazor (Interactive Server Render Mode)
-- **Styling:** Custom CSS (Flexbox, Variables, CSS Animations)
+- **UI Libraries:** Syncfusion Blazor Kanban (`v31.1.17`), MudBlazor
+- **Styling:** Custom CSS (Flexbox, CSS Variables, Glassmorphism)
 - **Networking:** `HttpClient` with standard `System.Text.Json` serialization
 
 ## 🤝 Contribution
