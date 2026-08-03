@@ -221,11 +221,32 @@ html, body {
 
 .jp-sidebar-head {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 14px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--bd);
     flex-shrink: 0;
+}
+
+.jp-sidebar-head-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.jp-sidebar-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.jp-sidebar-head-actions .jp-btn {
+    flex: 1;
+    font-size: 0.75rem;
+    height: 28px;
+    padding: 0 8px;
 }
 
 .jp-sidebar-title {
