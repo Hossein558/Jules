@@ -249,12 +249,8 @@
                             ⚡ تأیید برنامه
                         </button>
                     }
-                    <button class="jp-btn jp-btn--primary jp-btn--sm" title="جلسه جدید" @onclick="OpenCreateDialog">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        سشن جدید
-                    </button>
-                    <button class="jp-icon-btn" title="مدیریت اکانت‌ها" @onclick="OpenAccountsDialog">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <button class="jp-icon-btn jp-icon-btn--danger" title="حذف جلسه" @onclick="OpenDeleteConfirm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                     <button class="jp-icon-btn" title="بروزرسانی" @onclick="Refresh">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -401,6 +397,46 @@
 
     </div>
 </div>
+
+<!-- ══════════ DELETE SESSION CONFIRM DIALOG ══════════ -->
+@if (_deleteDlgOpen && _sel != null)
+{
+    <div class="jp-backdrop" @onclick="() => _deleteDlgOpen = false">
+        <div class="jp-modal" style="max-width: 420px;" @onclick:stopPropagation>
+            <div class="jp-modal-head">
+                <span class="jp-modal-title" style="color: var(--red);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    حذف جلسه
+                </span>
+                <button class="jp-modal-close" @onclick="() => _deleteDlgOpen = false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="jp-modal-body">
+                <p style="margin: 0 0 12px 0; font-size: 0.9rem; color: var(--tx);">آیا از حذف این جلسه اطمینان دارید؟</p>
+                <div style="background: var(--bg-hover); padding: 10px 14px; border-radius: var(--r-sm); border: 1px solid var(--bd); margin-bottom: 16px;">
+                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--tx);">@(string.IsNullOrWhiteSpace(_sel.Title) ? "بدون عنوان" : _sel.Title)</div>
+                    <div style="font-size: 0.78rem; color: var(--tx-muted); margin-top: 4px;">شناسه: @_sel.Id</div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--red); margin: 0;">⚠️ این عملیات غیرقابل بازگشت است.</p>
+            </div>
+            <div class="jp-modal-foot">
+                <button class="jp-btn jp-btn--ghost" @onclick="() => _deleteDlgOpen = false">انصراف</button>
+                <button class="jp-btn jp-btn--danger" disabled="@_deleting" @onclick="ConfirmDeleteSession">
+                    @if (_deleting)
+                    {
+                        <span class="jp-spin"></span>
+                        <span>&nbsp;در حال حذف...</span>
+                    }
+                    else
+                    {
+                        <span>تأیید و حذف</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 <!-- ══════════ CREATE SESSION DIALOG ══════════ -->
 @if (_dlgOpen)
@@ -605,6 +641,8 @@
     string _prompt = "";
 
     bool _dlgOpen;
+    bool _deleteDlgOpen;
+    bool _deleting;
     string _nTitle = "", _nPrompt = "", _nSource = "", _nBranch = "main", _nAccountId = "";
     bool _nApproval = true;
 
@@ -707,6 +745,47 @@
     }
 
     public void Dispose() { _disposed = true; _timer?.Dispose(); }
+
+        void OpenDeleteConfirm()
+    {
+        _deleteDlgOpen = true;
+    }
+
+    async Task ConfirmDeleteSession()
+    {
+        if (_sel == null || _deleting) return;
+        _deleting = true;
+        StateHasChanged();
+
+        try
+        {
+            var apiKey = SelectedApiKey();
+            var success = await JulesApi.DeleteSessionAsync(_sel.Id, apiKey);
+            if (success)
+            {
+                Snackbar.Add("جلسه با موفقیت حذف شد", Severity.Success);
+                var deletedId = _sel.Id;
+                _sel = null;
+                _deleteDlgOpen = false;
+                _sessions.RemoveAll(s => s.Id == deletedId);
+                await LoadSessions();
+            }
+            else
+            {
+                Snackbar.Add("خطا در حذف جلسه", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"خطا: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _deleting = false;
+            _deleteDlgOpen = false;
+            StateHasChanged();
+        }
+    }
 
     // ── Data Loading ──────────────────────────────────────────────────────────
 

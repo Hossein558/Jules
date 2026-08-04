@@ -1130,3 +1130,13 @@ html, body {
         flex-direction: column;
     }
 }
+
+.jp-btn--danger {
+    background: rgba(248,113,113,.12);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,.3);
+}
+.jp-btn--danger:hover:not(:disabled) {
+    background: rgba(248,113,113,.25);
+    border-color: var(--red);
+}

@@ -135,6 +135,22 @@ public class JulesApiService
         }
     }
 
+        public async Task<bool> DeleteSessionAsync(string sessionId, string? apiKey = null, CancellationToken ct = default)
+    {
+        try
+        {
+            using var req = CreateRequest(HttpMethod.Delete, $"sessions/{ExtractId(sessionId)}", apiKey);
+            var resp = await _http.SendAsync(req, ct);
+            resp.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete session {SessionId}", sessionId);
+            return false;
+        }
+    }
+
     // ── Activities ────────────────────────────────────────────────────────────
 
     private static string ExtractId(string nameOrId) =>
