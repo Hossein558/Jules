@@ -151,12 +151,15 @@ html, body {
 
 /* ── MudBlazor Override — force full-height flex chain ─ */
 .mud-appbar {
+    position: relative !important;
+    flex-shrink: 0 !important;
     background: var(--bg-panel) !important;
     border-bottom: 1px solid var(--bd) !important;
     box-shadow: 0 1px 24px rgba(0,0,0,.5) !important;
     min-height: 52px !important;
     height: 52px !important;
     color: var(--tx) !important;
+    z-index: 10 !important;
 }
 
 /* MudLayout is the root flex container — must fill the viewport */
