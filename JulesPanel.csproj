@@ -9,8 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="6.11.2" />
-    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="34.1.33" />
-    <PackageReference Include="Syncfusion.Blazor.Themes" Version="34.1.33" />
+    <PackageReference Include="Syncfusion.Blazor.Kanban" Version="31.2.2" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="31.2.2" />
   </ItemGroup>
 
 </Project>
