@@ -4,7 +4,6 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @implements IDisposable
-@using Syncfusion.Blazor.Kanban
 
 <PageTitle>Jules Panel</PageTitle>
 
@@ -17,22 +16,22 @@
         <div class="jp-sidebar-head">
             <div class="jp-sidebar-head-top">
                 <span class="jp-sidebar-title">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
                     جلسات
                 </span>
-                <div class="jp-view-toggle" role="group" aria-label="انتخاب نمای جلسات">
-                <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.List ? "jp-view-toggle-btn--active" : "")"
-                        title="نمای لیستی"
-                        aria-pressed="@(_mainViewMode == MainViewMode.List)"
-                        @onclick="() => _mainViewMode = MainViewMode.List">
-                    📋
-                </button>
-                <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.Kanban ? "jp-view-toggle-btn--active" : "")"
-                        title="نمای کانبان"
-                        aria-pressed="@(_mainViewMode == MainViewMode.Kanban)"
-                        @onclick="() => _mainViewMode = MainViewMode.Kanban">
-                    📊
-                </button>
+                <div class="jp-view-toggle" role="group" aria-label="انتخاب نمای اصلی">
+                    <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.List ? "jp-view-toggle-btn--active" : "")"
+                            title="نمای لیستی و چت"
+                            aria-pressed="@(_mainViewMode == MainViewMode.List)"
+                            @onclick="() => SetMainView(MainViewMode.List)">
+                        📋
+                    </button>
+                    <button class="jp-view-toggle-btn @(_mainViewMode == MainViewMode.Kanban ? "jp-view-toggle-btn--active" : "")"
+                            title="تخته کانبان جلسات"
+                            aria-pressed="@(_mainViewMode == MainViewMode.Kanban)"
+                            @onclick="() => SetMainView(MainViewMode.Kanban)">
+                        📊
+                    </button>
                 </div>
             </div>
             <div class="jp-sidebar-head-actions">
@@ -72,8 +71,9 @@
             else
             {
                 @RenderGroup("در حال کار", "working", WorkingSessions)
+                @RenderGroup("منتظر تأیید", "warning", AwaitingApprovalSessions)
                 @RenderGroup("کامل‌شده", "done", DoneSessions)
-                @RenderGroup("آرشیو", "archived", ArchivedSessions)
+                @RenderGroup("متوقف / آرشیو", "archived", PausedSessions)
                 @RenderGroup("سایر", "other", OtherSessions)
             }
         </div>
@@ -102,106 +102,153 @@
         @if (_mainViewMode == MainViewMode.Kanban)
         {
             <section class="jp-kanban-wrapper" aria-label="تخته کانبان جلسات">
-                <div class="jp-kanban-toolbar">
-                    <div class="jp-kanban-title">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-                        تخته کانبان جلسات
-                        <span class="jp-kanban-count">@KanbanCards.Count جلسه</span>
-                    </div>
-                    <div class="jp-kanban-controls">
-                        <div class="jp-kanban-submodes" role="group" aria-label="حالت کانبان">
-                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.Status ? "jp-kanban-submode-btn--active" : "")"
+                
+                <!-- Modern Kanban Header & Toolbar -->
+                <div class="jp-kb-toolbar">
+                    <div class="jp-kb-toolbar-right">
+                        <div class="jp-kb-title-box">
+                            <span class="jp-kb-main-icon">📊</span>
+                            <div class="jp-kb-title-texts">
+                                <h1 class="jp-kb-heading">تخته کانبان جلسات Jules</h1>
+                                <span class="jp-kb-subtitle">@FilteredSessions.Count() جلسه @(string.IsNullOrWhiteSpace(_searchQuery) && string.IsNullOrEmpty(_filterAccountId) ? "موجود" : "مطابق با فیلتر")</span>
+                            </div>
+                        </div>
+
+                        <!-- Sub-view switcher -->
+                        <div class="jp-kb-nav-tabs">
+                            <button class="jp-kb-nav-tab @(_kanbanMode == KanbanViewMode.Status ? "jp-kb-nav-tab--active" : "")"
                                     @onclick="() => _kanbanMode = KanbanViewMode.Status">
-                                بر اساس وضعیت
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                                <span>گردش وضعیت‌ها</span>
                             </button>
-                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.AccountSwimlanes ? "jp-kanban-submode-btn--active" : "")"
+                            <button class="jp-kb-nav-tab @(_kanbanMode == KanbanViewMode.AccountSwimlanes ? "jp-kb-nav-tab--active" : "")"
                                     @onclick="() => _kanbanMode = KanbanViewMode.AccountSwimlanes">
-                                اکانت + وضعیت
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                <span>تفکیک کاربران</span>
                             </button>
-                            <button class="jp-kanban-submode-btn @(_kanbanMode == KanbanViewMode.SimpleCards ? "jp-kanban-submode-btn--active" : "")"
+                            <button class="jp-kb-nav-tab @(_kanbanMode == KanbanViewMode.SimpleCards ? "jp-kb-nav-tab--active" : "")"
                                     @onclick="() => _kanbanMode = KanbanViewMode.SimpleCards">
-                                کارت‌های ساده
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                                <span>کارت‌های گرید</span>
                             </button>
                         </div>
-                        <button class="jp-btn jp-btn--primary jp-btn--sm" @onclick="OpenCreateDialog">+ جلسه جدید</button>
+                    </div>
+
+                    <!-- Search, Filters and Create button -->
+                    <div class="jp-kb-toolbar-left">
+                        <div class="jp-kb-search-box">
+                            <svg class="jp-kb-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input class="jp-kb-search-input" 
+                                   type="text" 
+                                   placeholder="جستجو در جلسات..." 
+                                   @bind="_searchQuery" 
+                                   @bind:event="oninput" />
+                            @if (!string.IsNullOrEmpty(_searchQuery))
+                            {
+                                <button class="jp-kb-search-clear" @onclick="() => _searchQuery = string.Empty">✕</button>
+                            }
+                        </div>
+
+                        @if (AccountSvc.GetAll().Count > 1)
+                        {
+                            <select class="jp-kb-filter-select" @bind="_filterAccountId">
+                                <option value="">همه کاربران</option>
+                                @foreach (var acc in AccountSvc.GetAll())
+                                {
+                                    <option value="@acc.Id">@acc.Name</option>
+                                }
+                            </select>
+                        }
+
+                        <button class="jp-btn jp-btn--primary jp-btn--sm" @onclick="OpenCreateDialog">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>جلسه جدید</span>
+                        </button>
                     </div>
                 </div>
 
-                <div class="jp-kanban-body">
+                <!-- Kanban Board Body -->
+                <div class="jp-kb-board-container">
                     @if (_loadSess)
                     {
-                        <div class="jp-state-center"><div class="jp-spin"></div></div>
+                        <div class="jp-state-center" style="height: 400px;"><div class="jp-spin"></div><span class="jp-state-label">در حال بارگذاری جلسات...</span></div>
                     }
-                    else if (!KanbanCards.Any())
+                    else if (!FilteredSessions.Any())
                     {
-                        <div class="jp-empty-state">هیچ جلسه‌ای برای نمایش وجود ندارد.</div>
+                        <div class="jp-kb-empty-board">
+                            <div class="jp-kb-empty-icon">📭</div>
+                            <h3>جلسه‌ای یافت نشد</h3>
+                            <p>هیچ جلسه‌ای مطابق با جستجو یا فیلتر فعلی شما پیدا نشد.</p>
+                            @if (!string.IsNullOrEmpty(_searchQuery) || !string.IsNullOrEmpty(_filterAccountId))
+                            {
+                                <button class="jp-btn jp-btn--ghost jp-btn--sm" @onclick="ClearFilters">پاک کردن فیلترها</button>
+                            }
+                        </div>
                     }
                     else
                     {
                         @switch (_kanbanMode)
                         {
                             case KanbanViewMode.Status:
-                                <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
-                                    <KanbanColumns>
-                                        @foreach (var column in KanbanStatusColumns)
-                                        {
-                                            <KanbanColumn HeaderText="@column.Header" KeyField="@column.Keys" />
-                                        }
-                                    </KanbanColumns>
-                                    <KanbanCardSettings HeaderField="Title">
-                                        <Template>
-                                            @{
-                                                var card = context as KanbanCardItem;
-                                            }
-                                            @if (card != null)
-                                            {
-                                                @RenderKanbanCard(card, true)
-                                            }
-                                        </Template>
-                                    </KanbanCardSettings>
-                                </SfKanban>
+                                <!-- 5 Clean, Standard Workflow Columns -->
+                                <div class="jp-kb-columns-row">
+                                    @RenderWorkflowColumn("WORKING", "در حال اجرا و برنامه‌ریزی", "⚡", "col--working", FilteredSessions.Where(s => s.IsWorking && !s.NeedsPlanApproval))
+                                    @RenderWorkflowColumn("AWAITING", "منتظر تأیید شما", "⚠️", "col--awaiting", FilteredSessions.Where(s => s.NeedsPlanApproval))
+                                    @RenderWorkflowColumn("PAUSED", "متوقف شده", "⏸️", "col--paused", FilteredSessions.Where(s => s.IsPaused))
+                                    @RenderWorkflowColumn("COMPLETED", "تکمیل شده", "✅", "col--completed", FilteredSessions.Where(s => s.IsCompleted))
+                                    @RenderWorkflowColumn("FAILED", "خطا / لغو", "❌", "col--failed", FilteredSessions.Where(s => s.IsFailed))
+                                </div>
                                 break;
 
                             case KanbanViewMode.AccountSwimlanes:
-                                <SfKanban TValue="KanbanCardItem" DataSource="@KanbanCards" KeyField="Status">
-                                    <KanbanColumns>
-                                        @foreach (var column in KanbanStatusColumns)
-                                        {
-                                            <KanbanColumn HeaderText="@column.Header" KeyField="@column.Keys" />
-                                        }
-                                    </KanbanColumns>
-                                    <KanbanSwimlaneSettings KeyField="AccountName" TextField="AccountName" />
-                                    <KanbanCardSettings HeaderField="Title">
-                                        <Template>
-                                            @{
-                                                var card = context as KanbanCardItem;
-                                            }
-                                            @if (card != null)
-                                            {
-                                                @RenderKanbanCard(card, false)
-                                            }
-                                        </Template>
-                                    </KanbanCardSettings>
-                                </SfKanban>
+                                <!-- Clean Account-grouped Sections (No empty matrix cells!) -->
+                                <div class="jp-swimlane-list">
+                                    @foreach (var acc in ActiveAccountsInView)
+                                    {
+                                        var accSessions = FilteredSessions.Where(s => s.AccountId == acc.Id).ToList();
+                                        var accWorking = accSessions.Count(s => s.IsWorking);
+                                        var accAwaiting = accSessions.Count(s => s.NeedsPlanApproval);
+                                        var accCompleted = accSessions.Count(s => s.IsCompleted);
+
+                                        <div class="jp-swimlane-section">
+                                            <div class="jp-swimlane-header" style="border-right-color: @acc.Color;">
+                                                <div class="jp-swimlane-user">
+                                                    <span class="jp-acc-avatar" style="background:@acc.Color">@acc.Initials</span>
+                                                    <div>
+                                                        <div class="jp-swimlane-name">@acc.Name</div>
+                                                        <div class="jp-swimlane-email">@acc.Email</div>
+                                                    </div>
+                                                </div>
+                                                <div class="jp-swimlane-stats">
+                                                    <span class="jp-swimlane-pill" title="کل جلسات">@accSessions.Count جلسه</span>
+                                                    @if (accAwaiting > 0)
+                                                    {
+                                                        <span class="jp-swimlane-pill jp-swimlane-pill--warn">⚠️ @accAwaiting منتظر تأیید</span>
+                                                    }
+                                                    @if (accWorking > 0)
+                                                    {
+                                                        <span class="jp-swimlane-pill jp-swimlane-pill--work">⚡ @accWorking فعال</span>
+                                                    }
+                                                    <span class="jp-swimlane-pill jp-swimlane-pill--done">✅ @accCompleted تکمیل</span>
+                                                </div>
+                                            </div>
+                                            <div class="jp-swimlane-cards-grid">
+                                                @foreach (var session in accSessions)
+                                                {
+                                                    @RenderModernCard(session, showAccount: false)
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
                                 break;
 
                             case KanbanViewMode.SimpleCards:
-                                <div class="jp-simple-card-grid">
-                                    @foreach (var card in KanbanCards)
+                                <!-- Compact Responsive Grid -->
+                                <div class="jp-compact-grid">
+                                    @foreach (var session in FilteredSessions)
                                     {
-                                        <button class="jp-simple-card" @onclick="() => OpenSessionFromKanban(card.Session)">
-                                            <span class="jp-simple-card-topline">
-                                                <span class="jp-acc-pip" style="background:@card.AccountColor"></span>
-                                                <span>@card.AccountName</span>
-                                                <span class="jp-status-badge jp-status-badge--@BadgeKey(card.Status)">@card.Status</span>
-                                            </span>
-                                            <strong>@card.Title</strong>
-                                            @if (!string.IsNullOrWhiteSpace(card.Prompt))
-                                            {
-                                                <span class="jp-simple-card-prompt">@card.Prompt</span>
-                                            }
-                                            <span class="jp-simple-card-meta">@card.CreatedAt</span>
-                                        </button>
+                                        @RenderModernCard(session, showAccount: true)
                                     }
                                 </div>
                                 break;
@@ -215,11 +262,15 @@
             <div class="jp-welcome">
                 <div class="jp-welcome-glyph">⚡</div>
                 <h2 class="jp-welcome-heading">پنل مدیریت هوشمند Jules</h2>
-                <p class="jp-welcome-sub">یک جلسه را از سایدبار انتخاب کنید یا یک جلسه جدید بسازید.</p>
+                <p class="jp-welcome-sub">یک جلسه را از سایدبار انتخاب کنید، نمای کانبان را باز کنید یا یک جلسه جدید بسازید.</p>
                 <div class="jp-welcome-actions">
                     <button class="jp-btn jp-btn--primary" @onclick="OpenCreateDialog">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         جلسه جدید
+                    </button>
+                    <button class="jp-btn jp-btn--ghost" @onclick="() => SetMainView(MainViewMode.Kanban)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        مشاهده تخته کانبان
                     </button>
                     <button class="jp-btn jp-btn--ghost" @onclick="OpenAccountsDialog">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -239,8 +290,15 @@
                             @GetInitials(_sel.AccountName)
                         </span>
                     }
-                    <span class="jp-titlebar-name">@(string.IsNullOrWhiteSpace(_sel.Title) ? _sel.Id : _sel.Title)</span>
-                    <span class="jp-status-badge jp-status-badge--@BadgeKey(_sel.State)">@(_sel.State ?? "—")</span>
+                    <span class="jp-titlebar-name">@_sel.DisplayTitle</span>
+                    <span class="jp-status-badge jp-status-badge--@_sel.StatusBadgeClass">@_sel.PersianStatusLabel</span>
+                    @if (!string.IsNullOrEmpty(_sel.RepositoryDisplay))
+                    {
+                        <span class="jp-repo-tag" title="مخزن و شاخه">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                            @_sel.RepositoryDisplay @(!string.IsNullOrEmpty(_sel.BranchDisplay) ? $": {_sel.BranchDisplay}" : "")
+                        </span>
+                    }
                 </div>
                 <div class="jp-titlebar-right">
                     @if (_sel.NeedsPlanApproval)
@@ -262,12 +320,12 @@
             <div class="jp-tabs">
                 <button class="jp-tab @(_tab == 0 ? "jp-tab--active" : "")" @onclick="() => _tab = 0">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-                    فعالیت‌ها
+                    فعالیت‌ها و گفتگو
                     @if (_activities.Count > 0) { <span class="jp-tab-pill">@_activities.Count</span> }
                 </button>
                 <button class="jp-tab @(_tab == 1 ? "jp-tab--active" : "")" @onclick="() => _tab = 1">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    برنامه
+                    برنامه کاری (Plan)
                     @if (_plan?.Steps.Count > 0) { <span class="jp-tab-pill">@_plan.Steps.Count</span> }
                     @if (_sel.NeedsPlanApproval) { <span class="jp-tab-dot"></span> }
                 </button>
@@ -315,7 +373,7 @@
                                     @if (act.Plan != null)
                                     {
                                         <div class="jp-bubble-body jp-bubble-plan-ref">
-                                            📌 برنامه جدید: <strong>@act.Plan.Title</strong> — @act.Plan.Steps.Count گام
+                                            📌 برنامه پیشنهادی جدید: <strong>@act.Plan.Title</strong> — @act.Plan.Steps.Count گام
                                         </div>
                                     }
                                 </div>
@@ -344,7 +402,7 @@
                             @if (_sel.NeedsPlanApproval)
                             {
                                 <div class="jp-approve-banner">
-                                    <span>⚠️ برنامه منتظر تأیید شماست تا مراحل اجرا شود.</span>
+                                    <span>⚠️ برنامه منتظر تأیید شماست تا مراحل زیر اجرا شود.</span>
                                     <button class="jp-btn jp-btn--warn jp-btn--sm" @onclick="Approve">تأیید و اجرا</button>
                                 </div>
                             }
@@ -415,7 +473,7 @@
             <div class="jp-modal-body">
                 <p style="margin: 0 0 12px 0; font-size: 0.9rem; color: var(--tx);">آیا از حذف این جلسه اطمینان دارید؟</p>
                 <div style="background: var(--bg-hover); padding: 10px 14px; border-radius: var(--r-sm); border: 1px solid var(--bd); margin-bottom: 16px;">
-                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--tx);">@(string.IsNullOrWhiteSpace(_sel.Title) ? "بدون عنوان" : _sel.Title)</div>
+                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--tx);">@_sel.DisplayTitle</div>
                     <div style="font-size: 0.78rem; color: var(--tx-muted); margin-top: 4px;">شناسه: @_sel.Id</div>
                 </div>
                 <p style="font-size: 0.8rem; color: var(--red); margin: 0;">⚠️ این عملیات غیرقابل بازگشت است.</p>
@@ -446,7 +504,7 @@
             <div class="jp-modal-head">
                 <span class="jp-modal-title">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    ایجاد جلسه جدید
+                    ایجاد جلسه جدید Jules
                 </span>
                 <button class="jp-modal-close" @onclick="() => _dlgOpen = false">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -469,12 +527,12 @@
 
                 <div class="jp-form-field">
                     <label class="jp-form-label">عنوان <span class="jp-form-optional">(اختیاری)</span></label>
-                    <input class="jp-form-input" type="text" placeholder="مثلاً: افزودن فرم لاگین" @bind="_nTitle" />
+                    <input class="jp-form-input" type="text" placeholder="مثلاً: اصلاح استایل‌های برد کانبان" @bind="_nTitle" />
                 </div>
 
                 <div class="jp-form-field">
-                    <label class="jp-form-label">دستور اولیه (Prompt) <span class="jp-form-req">*</span></label>
-                    <textarea class="jp-form-textarea" rows="4" placeholder="توضیح دهید Jules چه کاری باید انجام دهد..." @bind="_nPrompt"></textarea>
+                    <label class="jp-form-label">دستور اصلی (Prompt) <span class="jp-form-req">*</span></label>
+                    <textarea class="jp-form-textarea" rows="4" placeholder="به Jules بگویید دقیقاً چه کاری باید در کدها انجام دهد..." @bind="_nPrompt"></textarea>
                 </div>
 
                 <div class="jp-form-field">
@@ -486,7 +544,7 @@
                     else
                     {
                         <select class="jp-form-select" @bind="_nSource" @bind:after="OnSourceChanged">
-                            <option value="">— بدون منبع —</option>
+                            <option value="">— بدون مخزن متصل —</option>
                             @foreach (var src in _sources)
                             {
                                 <option value="@src.Name">@src.DisplayName</option>
@@ -499,7 +557,7 @@
                 {
                     var curSrc = _sources.FirstOrDefault(s => s.Name == _nSource);
                     <div class="jp-form-field">
-                        <label class="jp-form-label">شاخه (Branch)</label>
+                        <label class="jp-form-label">شاخه هدف (Branch)</label>
                         <select class="jp-form-select" @bind="_nBranch">
                             @if (curSrc?.GithubRepo?.Branches.Count > 0)
                             {
@@ -519,14 +577,14 @@
 
                 <div class="jp-form-check">
                     <input type="checkbox" id="chkApproval" @bind="_nApproval" />
-                    <label for="chkApproval">تأیید برنامه اجرا قبل از شروع کار</label>
+                    <label for="chkApproval">تأیید برنامه اجرا (Plan Approval) قبل از شروع خودکار کار</label>
                 </div>
 
             </div>
             <div class="jp-modal-foot">
                 <button class="jp-btn jp-btn--ghost" @onclick="() => _dlgOpen = false">انصراف</button>
                 <button class="jp-btn jp-btn--primary" disabled="@(_creating || string.IsNullOrWhiteSpace(_nPrompt))" @onclick="Create">
-                    @if (_creating) { <div class="jp-spin jp-spin--sm"></div> } else { <span>ایجاد جلسه</span> }
+                    @if (_creating) { <div class="jp-spin jp-spin--sm"></div> } else { <span>ایجاد و شروع جلسه</span> }
                 </button>
             </div>
         </div>
@@ -588,7 +646,7 @@
                 <div class="jp-form-row">
                     <div class="jp-form-field">
                         <label class="jp-form-label">نام اکانت <span class="jp-form-req">*</span></label>
-                        <input class="jp-form-input" type="text" placeholder="مثلاً: اکانت شرکت" @bind="_accName" />
+                        <input class="jp-form-input" type="text" placeholder="مثلاً: Hossein" @bind="_accName" />
                     </div>
                     <div class="jp-form-field">
                         <label class="jp-form-label">ایمیل</label>
@@ -650,13 +708,16 @@
     string? _editAccId;
     string _accName = "", _accEmail = "", _accApiKey = "", _accColor = "#a78bfa";
 
+    string _searchQuery = "";
+    string _filterAccountId = "";
+
     static readonly string[] AvailableColors =
         { "#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#f87171", "#ec4899", "#8b5cf6" };
 
     System.Threading.Timer? _timer;
     bool _disposed;
     bool _isLightMode = true;
-    MainViewMode _mainViewMode = MainViewMode.List;
+    MainViewMode _mainViewMode = MainViewMode.Kanban;
     KanbanViewMode _kanbanMode = KanbanViewMode.Status;
 
     enum MainViewMode
@@ -672,39 +733,51 @@
         SimpleCards
     }
 
-    sealed class KanbanCardItem
+    // Filtered Sessions based on search query and account filter
+    IEnumerable<Session> FilteredSessions
     {
-        public string Id { get; init; } = string.Empty;
-        public string Title { get; init; } = string.Empty;
-        public string Prompt { get; init; } = string.Empty;
-        public string Status { get; init; } = string.Empty;
-        public string AccountName { get; init; } = string.Empty;
-        public string AccountColor { get; init; } = string.Empty;
-        public string CreatedAt { get; init; } = string.Empty;
-        public Session Session { get; init; } = default!;
+        get
+        {
+            var res = _sessions.AsEnumerable();
+            if (!string.IsNullOrEmpty(_filterAccountId))
+                res = res.Where(s => s.AccountId == _filterAccountId);
+
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                var q = _searchQuery.Trim();
+                res = res.Where(s =>
+                    (s.Title != null && s.Title.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (s.Prompt != null && s.Prompt.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (s.RepositoryDisplay.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (s.AccountName != null && s.AccountName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                    (s.Id.Contains(q, StringComparison.OrdinalIgnoreCase)));
+            }
+            return res;
+        }
     }
 
-    sealed record KanbanColumnDefinition(string Header, List<string> Keys);
-
-    List<KanbanCardItem> KanbanCards => _sessions.Select(session => new KanbanCardItem
+    IEnumerable<AccountProfile> ActiveAccountsInView
     {
-        Id = session.Id,
-        Title = string.IsNullOrWhiteSpace(session.Title) ? session.Id : session.Title,
-        Prompt = session.Prompt,
-        Status = NormalizeKanbanStatus(session.State),
-        AccountName = ResolveAccountName(session),
-        AccountColor = string.IsNullOrWhiteSpace(session.AccountColor) ? "#a78bfa" : session.AccountColor,
-        CreatedAt = session.CreateTime?.ToLocalTime().ToString("yyyy/MM/dd HH:mm") ?? "—",
-        Session = session
-    }).ToList();
+        get
+        {
+            var accs = AccountSvc.GetAll();
+            if (!string.IsNullOrEmpty(_filterAccountId))
+                return accs.Where(a => a.Id == _filterAccountId);
+            return accs;
+        }
+    }
 
-    List<KanbanColumnDefinition> KanbanStatusColumns => KanbanCards
-        .Select(card => card.Status)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .OrderBy(StatusSortOrder)
-        .ThenBy(status => status, StringComparer.OrdinalIgnoreCase)
-        .Select(status => new KanbanColumnDefinition(StatusHeader(status), [status]))
-        .ToList();
+    void ClearFilters()
+    {
+        _searchQuery = "";
+        _filterAccountId = "";
+    }
+
+    void SetMainView(MainViewMode mode)
+    {
+        _mainViewMode = mode;
+        StateHasChanged();
+    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -746,7 +819,7 @@
 
     public void Dispose() { _disposed = true; _timer?.Dispose(); }
 
-        void OpenDeleteConfirm()
+    void OpenDeleteConfirm()
     {
         _deleteDlgOpen = true;
     }
@@ -807,7 +880,7 @@
 
     async Task<List<Session>> FetchAllSessionsAsync()
     {
-        var accounts = AccountSvc.GetAll();   // lock-free snapshot
+        var accounts = AccountSvc.GetAll();
         var combined = new List<Session>();
 
         if (accounts.Count > 0)
@@ -846,20 +919,15 @@
     async Task Pick(Session s)
     {
         _sel = s; _tab = 0; _activities = new(); _plan = null;
+        _mainViewMode = MainViewMode.List;
         StateHasChanged();
         await LoadAct();
-    }
-
-    async Task OpenSessionFromKanban(Session session)
-    {
-        _mainViewMode = MainViewMode.List;
-        await Pick(session);
     }
 
     string? SelectedApiKey()
     {
         if (_sel?.AccountId == null) return null;
-        return AccountSvc.GetById(_sel.AccountId)?.ApiKey;  // lock-free
+        return AccountSvc.GetById(_sel.AccountId)?.ApiKey;
     }
 
     async Task Refresh()
@@ -912,6 +980,20 @@
         if (await JulesApi.ApprovePlanAsync(_sel.Name, SelectedApiKey()))
         { Snackbar.Add("برنامه تأیید شد", Severity.Success); await Refresh(); }
         else Snackbar.Add("خطا در تأیید", Severity.Error);
+    }
+
+    async Task ApproveSessionDirect(Session s)
+    {
+        var key = !string.IsNullOrEmpty(s.AccountId) ? AccountSvc.GetById(s.AccountId)?.ApiKey : null;
+        if (await JulesApi.ApprovePlanAsync(s.Name, key))
+        {
+            Snackbar.Add($"برنامه جلسه '{s.DisplayTitle}' تأیید شد", Severity.Success);
+            await LoadSessions();
+        }
+        else
+        {
+            Snackbar.Add("خطا در تأیید برنامه", Severity.Error);
+        }
     }
 
     // ── Create Session ────────────────────────────────────────────────────────
@@ -1052,63 +1134,100 @@
                     {
                         <span class="jp-acc-badge" style="background:@s.AccountColor" title="@s.AccountName">@GetInitials(s.AccountName)</span>
                     }
-                    <span class="jp-sess-name">@(string.IsNullOrWhiteSpace(s.Title) ? "بدون عنوان" : s.Title)</span>
+                    <span class="jp-sess-name">@s.DisplayTitle</span>
                 </div>
                 <div class="jp-sess-meta">
-                    <span class="jp-status-badge jp-status-badge--@BadgeKey(s.State)">@(s.State ?? "—")</span>
-                    <span class="jp-sess-time">@(s.CreateTime?.ToLocalTime().ToString("MM/dd HH:mm"))</span>
+                    <span class="jp-status-badge jp-status-badge--@s.StatusBadgeClass">@s.PersianStatusLabel</span>
+                    <span class="jp-sess-time">@s.FormattedTimeShort</span>
                 </div>
             </div>
         }
     };
 
-    RenderFragment RenderKanbanCard(KanbanCardItem card, bool showAccount) => __builder =>
+    RenderFragment RenderWorkflowColumn(string key, string title, string icon, string colorClass, IEnumerable<Session> sessions) => __builder =>
     {
-        <button class="jp-kb-card" @onclick="() => OpenSessionFromKanban(card.Session)">
-            <span class="jp-kb-card-header">
-                <strong class="jp-kb-card-title">@card.Title</strong>
-                @if (showAccount)
+        var list = sessions.ToList();
+        <div class="jp-kb-col @colorClass">
+            <div class="jp-kb-col-head">
+                <div class="jp-kb-col-title-wrap">
+                    <span class="jp-kb-col-icon">@icon</span>
+                    <span class="jp-kb-col-title">@title</span>
+                </div>
+                <span class="jp-kb-col-badge">@list.Count</span>
+            </div>
+            <div class="jp-kb-col-cards">
+                @if (!list.Any())
                 {
-                    <span class="jp-acc-badge" style="background:@card.AccountColor" title="@card.AccountName">
-                        @GetInitials(card.AccountName)
-                    </span>
+                    <div class="jp-kb-col-empty">
+                        <span>خالی</span>
+                    </div>
                 }
                 else
                 {
-                    <span class="jp-status-badge jp-status-badge--@BadgeKey(card.Status)">@card.Status</span>
+                    @foreach (var session in list)
+                    {
+                        @RenderModernCard(session, showAccount: true)
+                    }
                 }
-            </span>
-            @if (!string.IsNullOrWhiteSpace(card.Prompt))
-            {
-                <span class="jp-kb-card-prompt">@card.Prompt</span>
-            }
-            <span class="jp-kb-card-footer">
-                <span>@(showAccount ? card.AccountName : card.Id)</span>
-                <span>@card.CreatedAt</span>
-            </span>
-        </button>
+            </div>
+        </div>
     };
 
-    static string NormalizeKanbanStatus(string? state) =>
-        string.IsNullOrWhiteSpace(state) ? "UNKNOWN" : state.Trim().ToUpperInvariant();
-
-    static string ResolveAccountName(Session session) =>
-        string.IsNullOrWhiteSpace(session.AccountName) ? "بدون اکانت" : session.AccountName.Trim();
-
-    int StatusSortOrder(string status)
+    RenderFragment RenderModernCard(Session session, bool showAccount) => __builder =>
     {
-        if (IsWorking(status)) return 0;
-        if (status.Contains("PLAN", StringComparison.OrdinalIgnoreCase)
-            || status.Contains("WAIT", StringComparison.OrdinalIgnoreCase)
-            || status.Contains("AWAIT", StringComparison.OrdinalIgnoreCase)) return 1;
-        if (IsDone(status)) return 2;
-        if (IsArchived(status)) return 3;
-        if (status.Contains("ERROR", StringComparison.OrdinalIgnoreCase)
-            || status.Contains("FAIL", StringComparison.OrdinalIgnoreCase)) return 4;
-        return 5;
-    }
+        <div class="jp-kb-card @(session.NeedsPlanApproval ? "jp-kb-card--needs-approval" : "")" @onclick="() => Pick(session)">
+            
+            <!-- Card Header: Account + Repo + Short ID -->
+            <div class="jp-kb-card-top">
+                <div class="jp-kb-card-meta-left">
+                    @if (showAccount && !string.IsNullOrEmpty(session.AccountName))
+                    {
+                        <span class="jp-acc-chip" style="background: @(session.AccountColor)20; color: @(session.AccountColor); border-color: @(session.AccountColor)40;">
+                            <span class="jp-acc-dot" style="background: @session.AccountColor"></span>
+                            @session.AccountName
+                        </span>
+                    }
+                    @if (!string.IsNullOrEmpty(session.RepositoryDisplay))
+                    {
+                        <span class="jp-kb-repo-pill" title="@session.RepositoryDisplay">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                            @session.RepositoryDisplay
+                        </span>
+                    }
+                </div>
+                <span class="jp-kb-card-id">#@session.ShortId</span>
+            </div>
 
-    static string StatusHeader(string status) => status.Replace('_', ' ');
+            <!-- Card Title -->
+            <h4 class="jp-kb-card-title">@session.DisplayTitle</h4>
+
+            <!-- Card Prompt Snippet -->
+            @if (!string.IsNullOrWhiteSpace(session.CleanPrompt) && session.CleanPrompt != session.Title)
+            {
+                <p class="jp-kb-card-prompt">@session.CleanPrompt</p>
+            }
+
+            <!-- Direct Plan Approval Call-to-action if waiting -->
+            @if (session.NeedsPlanApproval)
+            {
+                <div class="jp-kb-card-cta" @onclick:stopPropagation>
+                    <button class="jp-btn jp-btn--warn jp-btn--xs" @onclick="() => ApproveSessionDirect(session)">
+                        ⚡ تأیید و اجرای مستقیم برنامه
+                    </button>
+                </div>
+            }
+
+            <!-- Card Footer: Time + Status Badge -->
+            <div class="jp-kb-card-footer">
+                <span class="jp-kb-card-time">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    @session.FormattedTime
+                </span>
+                <span class="jp-status-badge jp-status-badge--@session.StatusBadgeClass">@session.PersianStatusLabel</span>
+            </div>
+
+        </div>
+    };
 
     string GetInitials(string? name) =>
         string.IsNullOrWhiteSpace(name) ? "?"
@@ -1125,19 +1244,18 @@
         return "idle";
     }
 
-    IEnumerable<Session> WorkingSessions  => _sessions.Where(s => IsWorking(s.State));
-    IEnumerable<Session> DoneSessions     => _sessions.Where(s => IsDone(s.State));
-    IEnumerable<Session> ArchivedSessions => _sessions.Where(s => IsArchived(s.State));
-    IEnumerable<Session> OtherSessions    => _sessions.Where(s => !IsWorking(s.State) && !IsDone(s.State) && !IsArchived(s.State));
+    IEnumerable<Session> WorkingSessions  => _sessions.Where(s => s.IsWorking && !s.NeedsPlanApproval);
+    IEnumerable<Session> AwaitingApprovalSessions => _sessions.Where(s => s.NeedsPlanApproval);
+    IEnumerable<Session> DoneSessions     => _sessions.Where(s => s.IsCompleted);
+    IEnumerable<Session> PausedSessions   => _sessions.Where(s => s.IsPaused || s.IsArchived);
+    IEnumerable<Session> OtherSessions    => _sessions.Where(s => !s.IsWorking && !s.NeedsPlanApproval && !s.IsCompleted && !s.IsPaused && !s.IsArchived);
 
     bool IsWorking(string? st)
     {
         if (st == null) return false;
         var u = st.ToUpper();
         return u is "IN_PROGRESS" or "PLANNING" or "QUEUED"
-            || u.Contains("WORKING") || u.Contains("RUNNING")
-            || (u.Contains("PLAN") && u.Contains("WAIT"))
-            || u.Contains("AWAITING");
+            || u.Contains("WORKING") || u.Contains("RUNNING");
     }
     bool IsDone(string? st) { if (st == null) return false; var u = st.ToUpper(); return u is "COMPLETED" or "DONE" or "FINISHED" || u.Contains("COMPLET"); }
     bool IsArchived(string? st) { if (st == null) return false; return st.ToUpper().Contains("ARCHIVED") || st.ToUpper() == "PAUSED"; }
