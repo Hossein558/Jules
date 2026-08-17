@@ -1046,6 +1046,12 @@ html, body {
     padding: 16px;
 }
 
+.jp-kanban-body .e-kanban .e-content-table,
+.jp-kanban-body .e-kanban .e-kanban-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
 .jp-kanban-body .e-kanban {
     min-width: 760px;
 }
@@ -1076,6 +1082,7 @@ html, body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 280px;
 }
 
 .jp-kb-card-prompt,
