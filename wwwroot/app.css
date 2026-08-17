@@ -513,6 +513,7 @@ html, body {
 }
 
 .jp-repo-tag {
+    direction: ltr;
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -647,6 +648,8 @@ html, body {
     color: var(--tx);
     white-space: pre-wrap;
     word-break: break-word;
+    unicode-bidi: plaintext;
+    text-align: start;
 }
 
 .jp-bubble-plan-ref {
@@ -704,7 +707,7 @@ html, body {
     border: 1px solid var(--bd);
     border-radius: var(--r-sm);
     display: flex;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 12px;
 }
 
@@ -965,7 +968,7 @@ html, body {
 .jp-kb-columns-row {
     display: flex;
     gap: 16px;
-    align-items: flex-start;
+    align-items: stretch;
     min-height: 100%;
     min-width: 1200px;
 }
@@ -1124,6 +1127,7 @@ html, body {
 }
 
 .jp-kb-repo-pill {
+    direction: ltr;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -1749,3 +1753,4 @@ html, body {
         width: 100%;
     }
 }
+
